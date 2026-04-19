@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Don Julio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --green:#1D9E75; --green-l:#E1F5EE; --green-d:#085041;
+  --purple:#534AB7; --purple-l:#EEEDFE; --purple-d:#26215C;
+  --amber:#BA7517; --amber-l:#FAEEDA; --amber-d:#633806;
+  --red:#E24B4A; --red-l:#FCEBEB;
+  --bg:#F7F5F0; --surface:#fff;
+  --border:rgba(0,0,0,0.09); --border2:rgba(0,0,0,0.15);
+  --text:#1A1A18; --muted:#6B6B67; --faint:#9E9E99;
+  --r:10px; --rl:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px}
+.nav-brand{display:flex;align-items:center;gap:8px;font-family:'DM Serif Display',serif;font-size:16px;margin-right:8px}
+.nav-logo{width:26px;height:26px;border-radius:7px;background:var(--green);display:flex;align-items:center;justify-content:center}
+.nav-logo svg{width:14px;height:14px}
+.nav-tabs{display:flex;gap:2px;flex:1}
+.nav-tab{padding:5px 13px;border-radius:7px;border:none;background:none;font-size:13px;color:var(--muted);transition:all .15s}
+.nav-tab:hover{background:rgba(0,0,0,.05);color:var(--text)}
+.nav-tab.active{background:var(--green-l);color:var(--green-d);font-weight:500}
+.nav-right{font-size:12px;color:var(--faint);font-family:'DM Mono',monospace}
+
+/* LAYOUT */
+.page{display:none;padding:24px 28px;max-width:1000px;margin:0 auto;animation:fadeIn .18s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:16px}
+.card-title{font-size:12px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface);font-size:13px;color:var(--text);font-weight:500;transition:all .15s}
+.btn:hover{background:var(--bg)}
+.btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-primary:hover{background:var(--green-d);border-color:var(--green-d)}
+.btn-purple{background:var(--purple);color:#fff;border-color:var(--purple)}
+.btn-purple:hover{background:var(--purple-d)}
+.btn-danger{background:var(--red-l);color:var(--red);border-color:var(--red)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:6px}
+
+/* INPUTS */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;color:var(--text);background:var(--bg);transition:border .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--green);background:var(--surface)}
+.field .hint{font-size:11px;color:var(--faint);margin-top:3px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* BADGES */
+.badge{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:10px}
+.badge-green{background:var(--green-l);color:var(--green-d)}
+.badge-amber{background:var(--amber-l);color:var(--amber-d)}
+.badge-purple{background:var(--purple-l);color:var(--purple-d)}
+.badge-gray{background:#F1EFE8;color:#5F5E5A}
+.badge-red{background:var(--red-l);color:var(--red)}
+
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:500;padding:0 10px 8px;text-align:left}
+.tbl th.r,.tbl td.r{text-align:right}
+.tbl td{padding:9px 10px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle}
+.tbl tr:hover td{background:var(--bg)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--rl);padding:22px 24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal h2{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:18px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* AVATAR */
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;z-index:999;padding:10px 16px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none}
+
+/* SEARCH BAR */
+.search-bar{display:flex;gap:8px;margin-bottom:16px;align-items:center}
+.search-bar input{flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--surface);color:var(--text)}
+.search-bar input:focus{outline:none;border-color:var(--green)}
+
+/* AUTOCOMPLETE */
+.autocomplete-wrap{position:relative}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);z-index:100;max-height:200px;overflow-y:auto;margin-top:2px;display:none}
+.autocomplete-list.open{display:block}
+.ac-item{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover{background:var(--green-l)}
+.ac-name{font-weight:500;color:var(--text)}
+.ac-meta{font-size:11px;color:var(--faint)}
+.ac-price{font-weight:500;color:var(--green-d);font-family:'DM Mono',monospace}
+
+/* VENTAS ITEMS TABLE */
+.items-tbl{width:100%;border-collapse:collapse;margin-bottom:8px}
+.items-tbl th{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;font-weight:500;padding:0 8px 8px;text-align:left}
+.items-tbl th.r{text-align:right}
+.items-tbl td{padding:7px 8px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle}
+.items-tbl td.r{text-align:right}
+.qty-ctrl{display:flex;align-items:center;gap:6px}
+.qty-btn{width:24px;height:24px;border-radius:5px;border:1px solid var(--border2);background:var(--bg);font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1}
+.qty-btn:hover{background:var(--green-l)}
+
+/* PREFIX TAG */
+.pfx{display:inline-block;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;background:var(--green-l);color:var(--green-d);padding:1px 5px;border-radius:4px;margin-right:4px}
+
+/* PROV CARD */
+.prov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.prov-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative}
+.prov-big{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;margin-bottom:4px}
+.prov-name-c{font-size:13px;font-weight:500;margin-bottom:2px}
+.prov-meta-c{font-size:11px;color:var(--faint)}
+
+/* CC pendiente block */
+.pend-block{border:1px solid #EF9F27;border-radius:var(--r);background:var(--amber-l);padding:12px 14px;margin-bottom:10px}
+.pend-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.pend-title{font-size:12px;font-weight:500;color:var(--amber-d)}
+.pend-date{font-size:11px;color:var(--amber)}
+.price-changed{display:flex;flex-direction:column;align-items:flex-end}
+.price-old{font-size:10px;color:var(--amber);text-decoration:line-through}
+.price-upd{font-size:9px;background:#EF9F27;color:#fff;padding:1px 5px;border-radius:8px}
+
+/* TABS */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:8px 14px;border:none;background:none;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--green-d);border-bottom-color:var(--green);font-weight:500}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* STEP WIZARD */
+.steps{display:flex;align-items:center;gap:4px;margin-bottom:18px}
+.step-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
+.step-item.active{color:var(--green-d);font-weight:500}
+.step-item.done{color:var(--green)}
+.step-num{width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;background:var(--bg)}
+.step-item.active .step-num{background:var(--green);color:#fff;border-color:var(--green)}
+.step-item.done .step-num{background:var(--green-l);color:var(--green-d);border-color:var(--green)}
+.step-sep{flex:1;height:1px;background:var(--border)}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:24px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg)}
+.upload-zone:hover{border-color:var(--green);background:var(--green-l)}
+.upload-zone.loaded{border-color:var(--green);background:var(--green-l)}
+.uz-text{font-size:13px;color:var(--muted);margin-bottom:4px}
+.uz-sub{font-size:11px;color:var(--faint)}
+
+/* NOTICE */
+.notice{display:flex;gap:10px;padding:10px 14px;border-radius:var(--r);margin-bottom:14px;font-size:12px;line-height:1.5}
+.notice-info{background:var(--green-l);border:1px solid var(--green);color:var(--green-d)}
+.notice-warn{background:var(--amber-l);border:1px solid #EF9F27;color:var(--amber-d)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--faint)}
+.empty-icon{font-size:32px;margin-bottom:8px;opacity:.4}
+.empty-text{font-size:13px}
+
+/* PRINT */
+@media print{nav,.no-print{display:none!important}.page{display:block!important;padding:0}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2l5 5-5 5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    Don Pepe
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="goPage('ventas')">Nueva venta</button>
+    <button class="nav-tab" onclick="goPage('cc')">Cuenta corriente</button>
+    <button class="nav-tab" onclick="goPage('clientes')">Clientes</button>
+    <button class="nav-tab" onclick="goPage('proveedores')">Proveedores</button>
+  </div>
+  <div class="nav-right" id="nav-date"></div>
+</nav>
+
+<!-- ══════════════════════════════════════
+     PÁGINA: NUEVA VENTA
+══════════════════════════════════════ -->
+<div class="page active" id="page-ventas">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <h1 style="font-family:'DM Serif Display',serif;font-size:26px">Nueva venta</h1>
+  </div>
+
+  <!-- Tipo de comprobante -->
+  <div class="card">
+    <div class="card-title">Tipo de comprobante</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn active-type" id="t-fa" onclick="setTipo('FA')">Factura A</button>
+      <button class="btn" id="t-fb" onclick="setTipo('FB')">Factura B</button>
+      <button class="btn" id="t-bo" onclick="setTipo('BO')">Boleta interna</button>
+    </div>
+  </div>
+
+  <!-- Cliente -->
+  <div class="card">
+    <div class="card-title">Cliente</div>
+    <div id="cliente-search-wrap">
+      <div class="autocomplete-wrap">
+        <input type="text" id="cliente-input" placeholder="Buscar por nombre…" oninput="buscarCliente(this.value)" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--bg);color:var(--text)">
+        <div class="autocomplete-list" id="cliente-ac"></div>
+      </div>
+      <button class="btn btn-sm" style="margin-top:8px" onclick="abrirModalCliente()">+ Nuevo cliente</button>
+    </div>
+    <div id="cliente-selected" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar" id="cliente-avatar" style="background:var(--green-l);color:var(--green-d)"></div>
+        <div style="flex:1">
+          <div style="font-weight:500;font-size:14px" id="cliente-nombre-tag"></div>
+          <div style="font-size:12px;color:var(--faint)" id="cliente-info-tag"></div>
+        </div>
+        <button class="btn btn-xs" onclick="clearCliente()">Cambiar</button>
+      </div>
+      <div id="cliente-pend-notice" style="margin-top:8px;display:none" class="notice notice-warn">
+        <span>Este cliente tiene <strong id="cliente-pend-count"></strong> comprobante(s) pendiente(s) en cuenta corriente.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="card">
+    <div class="card-title">Ítems</div>
+    <table class="items-tbl">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th style="width:110px">Cantidad</th>
+          <th class="r" style="width:120px">Precio unit.</th>
+          <th class="r" style="width:100px">Total</th>
+          <th style="width:32px"></th>
+        </tr>
+      </thead>
+      <tbody id="items-tbody"></tbody>
+    </table>
+
+    <div class="autocomplete-wrap" style="margin-top:8px">
+      <input type="text" id="item-input" placeholder="Agregar producto — escribí nombre o código…" oninput="buscarItem(this.value)" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--bg);color:var(--text)">
+      <div class="autocomplete-list" id="item-ac"></div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;align-items:baseline;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+      <span style="font-size:13px;color:var(--muted)">Total</span>
+      <span style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace" id="venta-total">$0</span>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px">
+    <button class="btn" style="flex:1;justify-content:center" onclick="guardarCC()">Guardar en cuenta corriente</button>
+    <button class="btn btn-primary" style="flex:1;justify-content:center" id="btn-emitir" onclick="emitirAhora()">Emitir boleta</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PÁGINA: CUENTA CORRIENTE
+══════════════════════════════════════ -->
+<div class="page" id="page-cc">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <h1 style="font-family:'DM Serif Display',serif;font-size:26px">Cuenta corriente</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Buscar cliente</div>
+    <div class="search-bar" style="margin-bottom:0">
+      <input type="text" id="cc-search" placeholder="Buscar por nombre…" oninput="renderCC(this.value)">
+    </div>
+  </div>
+
+  <div id="cc-list"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PÁGINA: CLIENTES
+══════════════════════════════════════ -->
+<div class="page" id="page-clientes">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <h1 style="font-family:'DM Serif Display',serif;font-size:26px">Clientes</h1>
+    <button class="btn btn-primary" onclick="abrirModalCliente()">+ Nuevo cliente</button>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+      <input type="text" id="clientes-search" placeholder="Buscar cliente…" oninput="renderClientes(this.value)" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--bg);color:var(--text)">
+    </div>
+    <table class="tbl" id="clientes-tbl">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Nombre</th>
+          <th>CUIT</th>
+          <th>Tipo habitual</th>
+          <th>Pendientes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="clientes-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PÁGINA: PROVEEDORES
+══════════════════════════════════════ -->
+<div class="page" id="page-proveedores">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <h1 style="font-family:'DM Serif Display',serif;font-size:26px">Proveedores</h1>
+    <button class="btn btn-primary" onclick="abrirModalProveedor()">+ Nuevo proveedor</button>
+  </div>
+
+  <div id="prov-grid" class="prov-grid" style="margin-bottom:16px"></div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em">Todos los productos</span>
+      <input type="text" id="prod-search" placeholder="Buscar…" oninput="renderProductos(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--bg);width:200px">
+    </div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Proveedor</th>
+          <th>Código</th>
+          <th>Producto</th>
+          <th class="r">Precio</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="productos-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODALES
+══════════════════════════════════════ -->
+
+<!-- Modal: Nuevo/Editar Cliente -->
+<div class="overlay" id="modal-cliente">
+  <div class="modal">
+    <h2 id="modal-cliente-title">Nuevo cliente</h2>
+    <input type="hidden" id="cl-id">
+    <div class="field-row">
+      <div class="field">
+        <label>Nombre completo *</label>
+        <input type="text" id="cl-nombre" placeholder="Ej: Rodríguez, Carlos">
+      </div>
+      <div class="field">
+        <label>CUIT (opcional)</label>
+        <input type="text" id="cl-cuit" placeholder="20-12345678-9">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Teléfono (opcional)</label>
+        <input type="text" id="cl-tel" placeholder="011 1234-5678">
+      </div>
+      <div class="field">
+        <label>Tipo de comprobante habitual</label>
+        <select id="cl-tipo">
+          <option value="FB">Factura B</option>
+          <option value="FA">Factura A</option>
+          <option value="BO">Boleta interna</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cerrarModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCliente()">Guardar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nuevo Proveedor (wizard) -->
+<div class="overlay" id="modal-proveedor">
+  <div class="modal">
+    <h2>Nuevo proveedor</h2>
+    <div class="steps" id="prov-steps">
+      <div class="step-item active" id="ps1"><div class="step-num">1</div> Datos</div>
+      <div class="step-sep"></div>
+      <div class="step-item" id="ps2"><div class="step-num">2</div> Excel</div>
+      <div class="step-sep"></div>
+      <div class="step-item" id="ps3"><div class="step-num">3</div> Columnas</div>
+      <div class="step-sep"></div>
+      <div class="step-item" id="ps4"><div class="step-num">4</div> Vista previa</div>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="prov-step1">
+      <div class="field">
+        <label>Nombre del proveedor *</label>
+        <input type="text" id="pv-nombre" placeholder="Ej: Vidogar" oninput="autoPrefijo()">
+      </div>
+      <div class="field">
+        <label>Prefijo (letra o código corto) *</label>
+        <input type="text" id="pv-prefijo" placeholder="Ej: V" maxlength="4" oninput="updatePrefijoPrev()">
+        <div class="hint">Aparece adelante de cada producto: "V · Tornillos 3x4". Máximo 4 caracteres.</div>
+      </div>
+      <div id="pv-prev-wrap" style="display:none;margin-top:8px">
+        <div class="hint" style="margin-bottom:4px">Así se verá en la factura:</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:inline-flex;align-items:center;gap:6px;background:var(--green-l);border-radius:6px;padding:5px 12px;font-size:13px;color:var(--green-d);font-weight:500;align-self:flex-start">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0"></span>
+            <span id="pv-prev1">V · Tornillos 3x4</span>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:var(--green-l);border-radius:6px;padding:5px 12px;font-size:13px;color:var(--green-d);font-weight:500;align-self:flex-start">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0"></span>
+            <span id="pv-prev2">V · Cinta métrica 5m</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="cerrarModal('modal-proveedor')">Cancelar</button>
+        <button class="btn btn-primary" onclick="pvNext(2)">Siguiente</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="prov-step2" style="display:none">
+      <div class="notice notice-info">Adjuntá el Excel tal como te lo manda el proveedor. El sistema te ayuda a configurar las columnas en el siguiente paso.</div>
+      <div class="upload-zone" id="pv-upload" onclick="document.getElementById('pv-file').click()">
+        <div class="uz-text" id="pv-upload-text">Hacé clic para adjuntar el Excel del proveedor</div>
+        <div class="uz-sub">.xlsx o .xls — la lista de precios</div>
+      </div>
+      <input type="file" id="pv-file" accept=".xlsx,.xls" style="display:none" onchange="cargarExcel(this)">
+      <div class="modal-footer">
+        <button class="btn" onclick="pvBack(1)">‹ Atrás</button>
+        <button class="btn btn-primary" id="pv-btn2" onclick="pvNext(3)" disabled style="opacity:.4">Siguiente</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="prov-step3" style="display:none">
+      <div class="hint" style="margin-bottom:12px">Indicá qué columna del Excel corresponde a cada campo. Solo hay que hacerlo una vez.</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Columna de código</label>
+          <select id="pv-col-cod"></select>
+        </div>
+        <div class="field">
+          <label>Columna de descripción *</label>
+          <select id="pv-col-desc"></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Columna de precio *</label>
+          <select id="pv-col-precio"></select>
+        </div>
+        <div class="field">
+          <label>Fila donde empiezan los datos</label>
+          <input type="number" id="pv-fila-inicio" value="2" min="1" max="20">
+          <div class="hint">Normalmente fila 2 (la 1 es el encabezado)</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="pvBack(2)">‹ Atrás</button>
+        <button class="btn btn-primary" onclick="pvNext(4)">Ver vista previa</button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div id="prov-step4" style="display:none">
+      <div class="hint" style="margin-bottom:10px">Primeros productos que se van a importar. Verificá que el prefijo y los datos sean correctos.</div>
+      <table class="tbl" style="margin-bottom:14px">
+        <thead><tr><th>En la factura</th><th>Código</th><th class="r">Precio</th></tr></thead>
+        <tbody id="pv-preview-tbody"></tbody>
+      </table>
+      <div style="font-size:12px;color:var(--faint)" id="pv-total-count"></div>
+      <div class="modal-footer">
+        <button class="btn" onclick="pvBack(3)">‹ Atrás</button>
+        <button class="btn btn-primary" onclick="confirmarImportacion()">Confirmar e importar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalle Cuenta Corriente de un cliente -->
+<div class="overlay" id="modal-cc">
+  <div class="modal" style="max-width:680px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="avatar" id="cc-avatar" style="width:40px;height:40px;font-size:14px"></div>
+      <div>
+        <div style="font-size:16px;font-weight:600" id="cc-nombre"></div>
+        <div style="font-size:12px;color:var(--faint)" id="cc-meta"></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="ccTab('pendientes',this)">Pendientes de emitir</button>
+      <button class="tab" onclick="ccTab('historial',this)">Historial emitidos</button>
+    </div>
+    <div class="tab-content active" id="cc-tab-pendientes"></div>
+    <div class="tab-content" id="cc-tab-historial"></div>
+    <div class="modal-footer no-print">
+      <button class="btn" onclick="cerrarModal('modal-cc')">Cerrar</button>
+      <button class="btn btn-primary" id="cc-emitir-todos" onclick="emitirTodos()">Emitir todos ahora</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Comprobante emitido -->
+<div class="overlay" id="modal-comprobante">
+  <div class="modal" style="max-width:520px">
+    <div style="text-align:center;padding:8px 0 16px">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 11l5 5 8-9" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px" id="comp-titulo"></div>
+      <div style="font-size:13px;color:var(--muted)" id="comp-subtitulo"></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <table class="tbl" id="comp-items-tbl">
+        <thead><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Total</th></tr></thead>
+        <tbody id="comp-tbody"></tbody>
+      </table>
+      <div style="display:flex;justify-content:space-between;padding:10px 10px 0;border-top:1px solid var(--border);margin-top:6px">
+        <span style="font-weight:500">Total</span>
+        <span style="font-weight:600;font-family:'DM Mono',monospace" id="comp-total"></span>
+      </div>
+    </div>
+    <div class="modal-footer no-print">
+      <button class="btn" onclick="cerrarModal('modal-comprobante')">Cerrar</button>
+      <button class="btn btn-primary" onclick="window.print()">Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<style>
+.active-type{background:var(--green-l);color:var(--green-d);border-color:var(--green);font-weight:500}
+.active-type-purple{background:var(--purple-l);color:var(--purple-d);border-color:var(--purple);font-weight:500}
+</style>
+
+<script>
+// ══════════════ DB (localStorage) ══════════════
+const DB = {
+  get(k){try{return JSON.parse(localStorage.getItem('dp_'+k)||'null')}catch{return null}},
+  set(k,v){localStorage.setItem('dp_'+k,JSON.stringify(v))},
+  clientes(){return this.get('clientes')||[]},
+  proveedores(){return this.get('proveedores')||[]},
+  productos(){return this.get('productos')||[]},
+  comprobantes(){return this.get('comprobantes')||[]},
+  saveClientes(v){this.set('clientes',v)},
+  saveProveedores(v){this.set('proveedores',v)},
+  saveProductos(v){this.set('productos',v)},
+  saveComprobantes(v){this.set('comprobantes',v)},
+};
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+// ══════════════ NAV ══════════════
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs=[...document.querySelectorAll('.nav-tab')];
+  const map={ventas:0,cc:1,clientes:2,proveedores:3};
+  if(map[id]!==undefined) tabs[map[id]].classList.add('active');
+  if(id==='cc') renderCC('');
+  if(id==='clientes') renderClientes('');
+  if(id==='proveedores'){renderProveedores();renderProductos('');}
+}
+
+// ══════════════ TOAST ══════════════
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=type==='ok'?'var(--green-l)':type==='err'?'var(--red-l)':'var(--amber-l)';
+  t.style.color=type==='ok'?'var(--green-d)':type==='err'?'var(--red)':'var(--amber-d)';
+  t.style.border=`1px solid ${type==='ok'?'var(--green)':type==='err'?'var(--red)':'#EF9F27'}`;
+  t.style.opacity='1';
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.style.opacity='0',3000);
+}
+
+// ══════════════ MODAL ══════════════
+function cerrarModal(id){document.getElementById(id).classList.remove('open')}
+function abrirModal(id){document.getElementById(id).classList.add('open')}
+
+// ══════════════ NUEVA VENTA ══════════════
+let tipoActual='FA';
+let clienteActual=null;
+let itemsActuales=[];
+
+function setTipo(t){
+  tipoActual=t;
+  ['t-fa','t-fb','t-bo'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.className='btn';
+  });
+  const map={FA:'t-fa',FB:'t-fb',BO:'t-bo'};
+  document.getElementById(map[t]).className=t==='BO'?'btn active-type-purple':'btn active-type';
+  const btn=document.getElementById('btn-emitir');
+  btn.textContent=t==='BO'?'Emitir boleta':'Emitir a AFIP (próx.)';
+  btn.className=t==='BO'?'btn btn-purple':'btn btn-primary';
+}
+
+function buscarCliente(val){
+  const ac=document.getElementById('cliente-ac');
+  if(!val){ac.classList.remove('open');return}
+  const hits=DB.clientes().filter(c=>c.nombre.toLowerCase().includes(val.toLowerCase()));
+  if(!hits.length){ac.classList.remove('open');return}
+  ac.innerHTML=hits.map(c=>{
+    const pend=DB.comprobantes().filter(x=>x.clienteId===c.id&&x.estado==='pendiente').length;
+    return `<div class="ac-item" onclick="seleccionarCliente('${c.id}')">
+      <div><span class="ac-name">${c.nombre}</span> ${pend?`<span class="badge badge-amber">${pend} pendiente${pend>1?'s':''}</span>`:''}<br><span class="ac-meta">${c.cuit||'Sin CUIT'}</span></div>
+    </div>`;
+  }).join('');
+  ac.classList.add('open');
+}
+
+function seleccionarCliente(id){
+  const c=DB.clientes().find(x=>x.id===id);
+  if(!c) return;
+  clienteActual=c;
+  document.getElementById('cliente-search-wrap').style.display='none';
+  document.getElementById('cliente-selected').style.display='block';
+  const ini=c.nombre.split(/[\s,]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('cliente-avatar').textContent=ini;
+  document.getElementById('cliente-nombre-tag').textContent=c.nombre;
+  document.getElementById('cliente-info-tag').textContent=c.cuit||'Sin CUIT';
+  document.getElementById('cliente-ac').classList.remove('open');
+  document.getElementById('cliente-input').value='';
+  const pend=DB.comprobantes().filter(x=>x.clienteId===c.id&&x.estado==='pendiente').length;
+  const notif=document.getElementById('cliente-pend-notice');
+  if(pend){notif.style.display='flex';document.getElementById('cliente-pend-count').textContent=pend;}
+  else notif.style.display='none';
+  setTipo(c.tipo||'FB');
+}
+
+function clearCliente(){
+  clienteActual=null;
+  document.getElementById('cliente-search-wrap').style.display='block';
+  document.getElementById('cliente-selected').style.display='none';
+  document.getElementById('cliente-pend-notice').style.display='none';
+}
+
+function buscarItem(val){
+  const ac=document.getElementById('item-ac');
+  if(!val){ac.classList.remove('open');return}
+  const prods=DB.productos().filter(p=>
+    p.nombre.toLowerCase().includes(val.toLowerCase())||
+    (p.codigo||'').toLowerCase().includes(val.toLowerCase())
+  );
+  if(!prods.length){ac.classList.remove('open');return}
+  ac.innerHTML=prods.slice(0,12).map(p=>`<div class="ac-item" onclick="agregarItem('${p.id}')">
+    <div>
+      <span class="pfx">${p.prefijo}</span>
+      <span class="ac-name">${p.nombre}</span>
+      <br><span class="ac-meta">${p.codigo||''} · ${p.proveedorNombre}</span>
+    </div>
+    <span class="ac-price">$${numFmt(p.precio)}</span>
+  </div>`).join('');
+  ac.classList.add('open');
+}
+
+function agregarItem(prodId){
+  const p=DB.productos().find(x=>x.id===prodId);
+  if(!p) return;
+  const existe=itemsActuales.find(x=>x.prodId===prodId);
+  if(existe){existe.qty++;renderItems();return;}
+  itemsActuales.push({prodId,nombre:p.nombre,prefijo:p.prefijo,precio:p.precio,qty:1});
+  renderItems();
+  document.getElementById('item-input').value='';
+  document.getElementById('item-ac').classList.remove('open');
+}
+
+function renderItems(){
+  const tbody=document.getElementById('items-tbody');
+  if(!itemsActuales.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:16px">Sin productos todavía</td></tr>';actualizarTotal();return;}
+  tbody.innerHTML=itemsActuales.map((it,i)=>`<tr>
+    <td><span class="pfx">${it.prefijo}</span>${it.nombre}</td>
+    <td><div class="qty-ctrl">
+      <button class="qty-btn" onclick="cambiarQty(${i},-1)">−</button>
+      <span style="min-width:24px;text-align:center;font-family:'DM Mono',monospace">${it.qty}</span>
+      <button class="qty-btn" onclick="cambiarQty(${i},1)">+</button>
+    </div></td>
+    <td class="r" style="font-family:'DM Mono',monospace">$${numFmt(it.precio)}</td>
+    <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(it.precio*it.qty)}</td>
+    <td><button class="btn btn-xs" style="color:var(--red);border-color:var(--red);background:var(--red-l)" onclick="quitarItem(${i})">✕</button></td>
+  </tr>`).join('');
+  actualizarTotal();
+}
+
+function cambiarQty(i,d){
+  itemsActuales[i].qty=Math.max(1,itemsActuales[i].qty+d);
+  renderItems();
+}
+function quitarItem(i){itemsActuales.splice(i,1);renderItems();}
+function actualizarTotal(){
+  const t=itemsActuales.reduce((s,it)=>s+it.precio*it.qty,0);
+  document.getElementById('venta-total').textContent='$'+numFmt(t);
+}
+
+function guardarCC(){
+  if(!clienteActual){toast('Seleccioná un cliente primero','warn');return;}
+  if(!itemsActuales.length){toast('Agregá al menos un producto','warn');return;}
+  const comp={
+    id:uid(),clienteId:clienteActual.id,clienteNombre:clienteActual.nombre,
+    tipo:tipoActual,estado:'pendiente',
+    fecha:new Date().toLocaleDateString('es-AR'),
+    items:itemsActuales.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty}))
+  };
+  const comps=DB.comprobantes();comps.push(comp);DB.saveComprobantes(comps);
+  toast(`Guardado en cuenta corriente de ${clienteActual.nombre}`);
+  resetVenta();
+}
+
+function emitirAhora(){
+  if(!clienteActual){toast('Seleccioná un cliente primero','warn');return;}
+  if(!itemsActuales.length){toast('Agregá al menos un producto','warn');return;}
+  const items=itemsActuales.map(it=>{
+    const p=DB.productos().find(x=>x.id===it.prodId);
+    return{...it,precio:p?p.precio:it.precio};
+  });
+  const nro=nextNro(tipoActual);
+  const comp={
+    id:uid(),clienteId:clienteActual.id,clienteNombre:clienteActual.nombre,
+    tipo:tipoActual,estado:'emitido',numero:nro,
+    fecha:new Date().toLocaleDateString('es-AR'),
+    items:items.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty,precio:it.precio})),
+    total:items.reduce((s,it)=>s+it.precio*it.qty,0)
+  };
+  const comps=DB.comprobantes();comps.push(comp);DB.saveComprobantes(comps);
+  mostrarComprobante(comp);
+  resetVenta();
+}
+
+function resetVenta(){
+  clienteActual=null;itemsActuales=[];
+  clearCliente();renderItems();
+  setTipo('FA');
+}
+
+function nextNro(tipo){
+  const prefix=tipo==='FA'?'FA':tipo==='FB'?'FB':'BL';
+  const comps=DB.comprobantes().filter(c=>c.tipo===tipo&&c.estado==='emitido');
+  return `${prefix}-${String(comps.length+1).padStart(4,'0')}`;
+}
+
+// ══════════════ CUENTA CORRIENTE ══════════════
+let ccClienteActual=null;
+
+function renderCC(filtro){
+  const clientes=DB.clientes().filter(c=>c.nombre.toLowerCase().includes(filtro.toLowerCase()));
+  const comps=DB.comprobantes();
+  const div=document.getElementById('cc-list');
+  const conPend=clientes.filter(c=>comps.some(x=>x.clienteId===c.id&&x.estado==='pendiente'));
+  const sinPend=clientes.filter(c=>!comps.some(x=>x.clienteId===c.id&&x.estado==='pendiente'));
+  const sorted=[...conPend,...sinPend].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  if(!sorted.length){div.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No hay clientes todavía</div></div>';return;}
+  div.innerHTML=sorted.map(c=>{
+    const pend=comps.filter(x=>x.clienteId===c.id&&x.estado==='pendiente');
+    const ini=c.nombre.split(/[\s,]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const colors=[['var(--green-l)','var(--green-d)'],['var(--purple-l)','var(--purple-d)'],['var(--amber-l)','var(--amber-d)']];
+    const col=colors[Math.abs(c.nombre.charCodeAt(0))%3];
+    return `<div class="card" style="margin-bottom:10px;cursor:pointer" onclick="abrirCC('${c.id}')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="avatar" style="background:${col[0]};color:${col[1]}">${ini}</div>
+        <div style="flex:1">
+          <div style="font-weight:500">${c.nombre}</div>
+          <div style="font-size:12px;color:var(--faint)">${c.cuit||'Sin CUIT'}</div>
+        </div>
+        ${pend.length?`<span class="badge badge-amber">${pend.length} pendiente${pend.length>1?'s':''}</span>`:'<span class="badge badge-green">Al día</span>'}
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--faint)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirCC(clienteId){
+  const c=DB.clientes().find(x=>x.id===clienteId);
+  if(!c) return;
+  ccClienteActual=c;
+  const ini=c.nombre.split(/[\s,]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('cc-avatar').textContent=ini;
+  document.getElementById('cc-avatar').style.background='var(--green-l)';
+  document.getElementById('cc-avatar').style.color='var(--green-d)';
+  document.getElementById('cc-nombre').textContent=c.nombre;
+  document.getElementById('cc-meta').textContent=c.cuit||'Sin CUIT';
+  renderCCPendientes();
+  renderCCHistorial();
+  const pend=DB.comprobantes().filter(x=>x.clienteId===clienteId&&x.estado==='pendiente');
+  document.getElementById('cc-emitir-todos').style.display=pend.length?'':'none';
+  abrirModal('modal-cc');
+}
+
+function renderCCPendientes(){
+  const comps=DB.comprobantes().filter(x=>x.clienteId===ccClienteActual.id&&x.estado==='pendiente');
+  const div=document.getElementById('cc-tab-pendientes');
+  if(!comps.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">Sin comprobantes pendientes</div></div>';
+    return;
+  }
+  const notice=`<div class="notice notice-info" style="margin-bottom:12px">Los precios se calculan con la <strong>lista vigente al momento de emitir</strong>.</div>`;
+  const blocks=comps.map(comp=>{
+    const tipoLabel=comp.tipo==='FA'?'Factura A':comp.tipo==='FB'?'Factura B':'Boleta interna';
+    const rows=comp.items.map(it=>{
+      const prod=DB.productos().find(p=>p.id===it.prodId);
+      const precioActual=prod?prod.precio:null;
+      let precioCell='<span style="color:var(--faint);font-size:11px">Producto sin precio</span>';
+      if(precioActual!==null){
+        precioCell=`<span style="font-family:\'DM Mono\',monospace;font-weight:500">$${numFmt(precioActual)}</span>`;
+      }
+      return `<tr>
+        <td><span class="pfx">${it.prefijo}</span>${it.nombre}</td>
+        <td class="r">${it.qty}</td>
+        <td class="r">${precioCell}</td>
+        <td class="r" style="font-family:\'DM Mono\',monospace;font-weight:500">${precioActual!==null?'$'+numFmt(precioActual*it.qty):'—'}</td>
+      </tr>`;
+    }).join('');
+    const total=comp.items.reduce((s,it)=>{const p=DB.productos().find(x=>x.id===it.prodId);return s+(p?p.precio*it.qty:0)},0);
+    return `<div class="pend-block">
+      <div class="pend-header">
+        <span class="pend-title">${tipoLabel}</span>
+        <span class="pend-date">Cargado el ${comp.fecha}</span>
+      </div>
+      <table class="tbl" style="margin-bottom:6px">
+        <thead><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Precio hoy</th><th class="r">Subtotal</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="display:flex;justify-content:space-between;padding:8px 10px 0;border-top:1px solid #FAC775">
+        <span style="font-size:12px;color:var(--amber-d)">Subtotal</span>
+        <span style="font-size:13px;font-weight:500;color:var(--amber-d);font-family:\'DM Mono\',monospace">$${numFmt(total)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  const grandTotal=comps.reduce((s,comp)=>s+comp.items.reduce((ss,it)=>{const p=DB.productos().find(x=>x.id===it.prodId);return ss+(p?p.precio*it.qty:0)},0),0);
+  div.innerHTML=notice+blocks+`<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+    <span style="font-size:13px;color:var(--muted)">Total a emitir (${comps.length} comprobante${comps.length>1?'s':''})</span>
+    <span style="font-size:20px;font-weight:600;font-family:'DM Mono',monospace">$${numFmt(grandTotal)}</span>
+  </div>`;
+}
+
+function renderCCHistorial(){
+  const comps=DB.comprobantes().filter(x=>x.clienteId===ccClienteActual.id&&x.estado==='emitido').reverse();
+  const div=document.getElementById('cc-tab-historial');
+  if(!comps.length){div.innerHTML='<div class="empty"><div class="empty-icon">📄</div><div class="empty-text">Sin comprobantes emitidos todavía</div></div>';return;}
+  div.innerHTML=comps.map(c=>`<div class="card" style="margin-bottom:8px;padding:12px 14px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:500;font-size:13px">${c.numero} · ${c.tipo==='FA'?'Factura A':c.tipo==='FB'?'Factura B':'Boleta'}</div>
+        <div style="font-size:12px;color:var(--faint)">Emitido el ${c.fecha} · ${c.items.length} ítem${c.items.length>1?'s':''}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:600;font-family:'DM Mono',monospace">$${numFmt(c.total)}</div>
+        <button class="btn btn-xs" style="margin-top:4px" onclick="mostrarComprobante(DB.comprobantes().find(x=>x.id==='${c.id}'))">Ver / imprimir</button>
+      </div>
+    </div>
+  </div>`).join('');
+}
+
+function ccTab(name,btn){
+  document.querySelectorAll('#modal-cc .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#modal-cc .tab-content').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cc-tab-'+name).classList.add('active');
+}
+
+function emitirTodos(){
+  if(!ccClienteActual) return;
+  const comps=DB.comprobantes();
+  const pend=comps.filter(x=>x.clienteId===ccClienteActual.id&&x.estado==='pendiente');
+  if(!pend.length){toast('No hay pendientes','warn');return;}
+  pend.forEach(comp=>{
+    const items=comp.items.map(it=>{
+      const p=DB.productos().find(x=>x.id===it.prodId);
+      return{...it,precio:p?p.precio:0};
+    });
+    const idx=comps.findIndex(x=>x.id===comp.id);
+    comps[idx]={...comps[idx],estado:'emitido',numero:nextNro(comp.tipo),
+      fecha:new Date().toLocaleDateString('es-AR'),
+      items,total:items.reduce((s,it)=>s+it.precio*it.qty,0)};
+  });
+  DB.saveComprobantes(comps);
+  toast(`${pend.length} comprobante${pend.length>1?'s':''} emitido${pend.length>1?'s':''}`);
+  renderCCPendientes();renderCCHistorial();
+  document.getElementById('cc-emitir-todos').style.display='none';
+}
+
+// ══════════════ COMPROBANTE ══════════════
+function mostrarComprobante(comp){
+  if(!comp) return;
+  const tipoLabel=comp.tipo==='FA'?'Factura A':comp.tipo==='FB'?'Factura B':'Boleta interna';
+  document.getElementById('comp-titulo').textContent=`${tipoLabel} ${comp.numero||''}`;
+  document.getElementById('comp-subtitulo').textContent=`${comp.clienteNombre} · ${comp.fecha}`;
+  document.getElementById('comp-tbody').innerHTML=comp.items.map(it=>`<tr>
+    <td><span class="pfx">${it.prefijo}</span>${it.nombre}</td>
+    <td class="r">${it.qty}</td>
+    <td class="r" style="font-family:'DM Mono',monospace">$${numFmt(it.precio)}</td>
+    <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(it.precio*it.qty)}</td>
+  </tr>`).join('');
+  document.getElementById('comp-total').textContent='$'+numFmt(comp.total);
+  cerrarModal('modal-cc');
+  abrirModal('modal-comprobante');
+}
+
+// ══════════════ CLIENTES ══════════════
+function renderClientes(filtro){
+  const lista=DB.clientes()
+    .filter(c=>c.nombre.toLowerCase().includes(filtro.toLowerCase()))
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  const tbody=document.getElementById('clientes-tbody');
+  if(!lista.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No hay clientes</div></div></td></tr>`;return;}
+  const comps=DB.comprobantes();
+  tbody.innerHTML=lista.map(c=>{
+    const pend=comps.filter(x=>x.clienteId===c.id&&x.estado==='pendiente').length;
+    const ini=c.nombre.split(/[\s,]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const tipoLabel=c.tipo==='FA'?'Factura A':c.tipo==='FB'?'Factura B':'Boleta';
+    return `<tr>
+      <td><div class="avatar" style="background:var(--green-l);color:var(--green-d)">${ini}</div></td>
+      <td style="font-weight:500">${c.nombre}</td>
+      <td style="color:var(--faint);font-size:12px">${c.cuit||'—'}</td>
+      <td><span class="badge badge-gray">${tipoLabel}</span></td>
+      <td>${pend?`<span class="badge badge-amber">${pend} pend.</span>`:'<span class="badge badge-green">Al día</span>'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-xs" onclick="editarCliente('${c.id}')">Editar</button>
+        <button class="btn btn-xs" onclick="abrirCC('${c.id}')">CC</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirModalCliente(){
+  document.getElementById('modal-cliente-title').textContent='Nuevo cliente';
+  document.getElementById('cl-id').value='';
+  document.getElementById('cl-nombre').value='';
+  document.getElementById('cl-cuit').value='';
+  document.getElementById('cl-tel').value='';
+  document.getElementById('cl-tipo').value='FB';
+  abrirModal('modal-cliente');
+}
+
+function editarCliente(id){
+  const c=DB.clientes().find(x=>x.id===id);if(!c) return;
+  document.getElementById('modal-cliente-title').textContent='Editar cliente';
+  document.getElementById('cl-id').value=c.id;
+  document.getElementById('cl-nombre').value=c.nombre;
+  document.getElementById('cl-cuit').value=c.cuit||'';
+  document.getElementById('cl-tel').value=c.tel||'';
+  document.getElementById('cl-tipo').value=c.tipo||'FB';
+  abrirModal('modal-cliente');
+}
+
+function guardarCliente(){
+  const nombre=document.getElementById('cl-nombre').value.trim();
+  if(!nombre){toast('El nombre es obligatorio','err');return;}
+  const id=document.getElementById('cl-id').value||uid();
+  const lista=DB.clientes();
+  const idx=lista.findIndex(x=>x.id===id);
+  const cliente={id,nombre,cuit:document.getElementById('cl-cuit').value.trim(),tel:document.getElementById('cl-tel').value.trim(),tipo:document.getElementById('cl-tipo').value};
+  if(idx>=0) lista[idx]=cliente; else lista.push(cliente);
+  DB.saveClientes(lista);
+  cerrarModal('modal-cliente');
+  toast(idx>=0?'Cliente actualizado':'Cliente creado');
+  renderClientes(document.getElementById('clientes-search')?.value||'');
+  if(clienteActual?.id===id) seleccionarCliente(id);
+}
+
+// ══════════════ PROVEEDORES ══════════════
+let xlsxData=null;
+let xlsxCols=[];
+
+function renderProveedores(){
+  const provs=DB.proveedores();
+  const grid=document.getElementById('prov-grid');
+  if(!provs.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🏭</div><div class="empty-text">No hay proveedores todavía</div></div>';return;}
+  const colors=['var(--green)','var(--purple)','var(--amber)','#E24B4A','#185FA5'];
+  grid.innerHTML=provs.map((p,i)=>{
+    const prods=DB.productos().filter(x=>x.proveedorId===p.id).length;
+    return `<div class="prov-card">
+      <div class="prov-big" style="color:${colors[i%colors.length]}">${p.prefijo}</div>
+      <div class="prov-name-c">${p.nombre}</div>
+      <div class="prov-meta-c">${prods} producto${prods!==1?'s':''}</div>
+      <div class="prov-meta-c" style="margin-top:4px">Actualizado ${p.fecha||'—'}</div>
+      <button class="btn btn-xs" style="margin-top:10px" onclick="reimportarProveedor('${p.id}')">Reimportar lista</button>
+    </div>`;
+  }).join('');
+}
+
+function renderProductos(filtro){
+  const prods=DB.productos()
+    .filter(p=>p.nombre.toLowerCase().includes(filtro.toLowerCase())||(p.codigo||'').toLowerCase().includes(filtro.toLowerCase()))
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  const tbody=document.getElementById('productos-tbody');
+  if(!prods.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin productos</div></div></td></tr>`;return;}
+  tbody.innerHTML=prods.map(p=>`<tr>
+    <td><span class="pfx">${p.prefijo}</span>${p.proveedorNombre}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--faint)">${p.codigo||'—'}</td>
+    <td>${p.nombre}</td>
+    <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(p.precio)}</td>
+    <td><button class="btn btn-xs" onclick="eliminarProducto('${p.id}')">✕</button></td>
+  </tr>`).join('');
+}
+
+function eliminarProducto(id){
+  if(!confirm('¿Eliminar este producto?')) return;
+  const prods=DB.productos().filter(x=>x.id!==id);
+  DB.saveProductos(prods);renderProductos('');renderProveedores();
+}
+
+let pvProvId=null;
+
+function abrirModalProveedor(reimportar=false,provId=null){
+  pvProvId=reimportar?provId:null;
+  xlsxData=null;xlsxCols=[];
+  document.getElementById('pv-nombre').value='';
+  document.getElementById('pv-prefijo').value='';
+  document.getElementById('pv-prev-wrap').style.display='none';
+  document.getElementById('pv-upload').classList.remove('loaded');
+  document.getElementById('pv-upload-text').textContent='Hacé clic para adjuntar el Excel del proveedor';
+  document.getElementById('pv-btn2').disabled=true;
+  document.getElementById('pv-btn2').style.opacity='.4';
+  document.getElementById('pv-file').value='';
+  if(reimportar&&provId){
+    const p=DB.proveedores().find(x=>x.id===provId);
+    if(p){document.getElementById('pv-nombre').value=p.nombre;document.getElementById('pv-prefijo').value=p.prefijo;updatePrefijoPrev();}
+  }
+  pvSetStep(reimportar?2:1);
+  abrirModal('modal-proveedor');
+}
+
+function reimportarProveedor(id){abrirModalProveedor(true,id);}
+
+function pvSetStep(n){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('prov-step'+i).style.display=i===n?'block':'none';
+    const s=document.getElementById('ps'+i);
+    s.className='step-item'+(i===n?' active':i<n?' done':'');
+    s.querySelector('.step-num').textContent=i<n?'✓':i;
+  });
+}
+function pvNext(n){
+  if(n===2){
+    const nom=document.getElementById('pv-nombre').value.trim();
+    const pfx=document.getElementById('pv-prefijo').value.trim();
+    if(!nom||!pfx){toast('Completá nombre y prefijo','warn');return;}
+  }
+  if(n===4) buildPreview();
+  pvSetStep(n);
+}
+function pvBack(n){pvSetStep(n);}
+
+function autoPrefijo(){
+  const n=document.getElementById('pv-nombre').value;
+  if(!document.getElementById('pv-prefijo').value&&n) document.getElementById('pv-prefijo').value=n[0].toUpperCase();
+  updatePrefijoPrev();
+}
+function updatePrefijoPrev(){
+  const p=document.getElementById('pv-prefijo').value;
+  const wrap=document.getElementById('pv-prev-wrap');
+  if(p){wrap.style.display='block';document.getElementById('pv-prev1').textContent=p+' · Tornillos 3x4';document.getElementById('pv-prev2').textContent=p+' · Cinta métrica 5m';}
+  else wrap.style.display='none';
+}
+
+function cargarExcel(input){
+  const file=input.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    xlsxData=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    xlsxCols=xlsxData[0]||[];
+    const colSel=['pv-col-cod','pv-col-desc','pv-col-precio'].map(id=>document.getElementById(id));
+    const opts=['— no incluir —',...xlsxCols.map((c,i)=>`Columna ${String.fromCharCode(65+i)} — ${c}`)];
+    colSel.forEach((sel,si)=>{
+      sel.innerHTML=opts.map((o,i)=>`<option value="${i-1}"${i===si+1?' selected':''}>${o}</option>`).join('');
+    });
+    document.getElementById('pv-upload').classList.add('loaded');
+    document.getElementById('pv-upload-text').textContent=`${file.name} — ${xlsxData.length-1} filas detectadas`;
+    document.getElementById('pv-btn2').disabled=false;
+    document.getElementById('pv-btn2').style.opacity='1';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function buildPreview(){
+  const pfx=document.getElementById('pv-prefijo').value;
+  const colDesc=parseInt(document.getElementById('pv-col-desc').value);
+  const colPrecio=parseInt(document.getElementById('pv-col-precio').value);
+  const colCod=parseInt(document.getElementById('pv-col-cod').value);
+  const filaInicio=parseInt(document.getElementById('pv-fila-inicio').value)||2;
+  const rows=xlsxData.slice(filaInicio-1).filter(r=>r[colDesc]&&r[colPrecio]).slice(0,5);
+  const tbody=document.getElementById('pv-preview-tbody');
+  tbody.innerHTML=rows.map(r=>`<tr>
+    <td><span class="pfx">${pfx}</span>${r[colDesc]}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--faint)">${colCod>=0?r[colCod]:'—'}</td>
+    <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(parseFloat(String(r[colPrecio]).replace(/[^0-9.,-]/g,'').replace(',','.'))||0)}</td>
+  </tr>`).join('');
+  const total=xlsxData.slice(filaInicio-1).filter(r=>r[colDesc]&&r[colPrecio]).length;
+  document.getElementById('pv-total-count').textContent=`Se importarán ${total} productos en total.`;
+}
+
+function confirmarImportacion(){
+  const nombre=document.getElementById('pv-nombre').value.trim();
+  const pfx=document.getElementById('pv-prefijo').value.trim();
+  const colDesc=parseInt(document.getElementById('pv-col-desc').value);
+  const colPrecio=parseInt(document.getElementById('pv-col-precio').value);
+  const colCod=parseInt(document.getElementById('pv-col-cod').value);
+  const filaInicio=parseInt(document.getElementById('pv-fila-inicio').value)||2;
+  const provId=pvProvId||uid();
+  const provs=DB.proveedores();
+  const idx=provs.findIndex(x=>x.id===provId);
+  const prov={id:provId,nombre,prefijo:pfx,fecha:new Date().toLocaleDateString('es-AR')};
+  if(idx>=0) provs[idx]=prov; else provs.push(prov);
+  DB.saveProveedores(provs);
+  // productos
+  let prods=DB.productos().filter(p=>p.proveedorId!==provId);
+  const nuevos=xlsxData.slice(filaInicio-1)
+    .filter(r=>r[colDesc]&&r[colPrecio])
+    .map(r=>({
+      id:uid(),proveedorId:provId,proveedorNombre:nombre,prefijo:pfx,
+      nombre:String(r[colDesc]).trim(),
+      codigo:colCod>=0?String(r[colCod]).trim():'',
+      precio:parseFloat(String(r[colPrecio]).replace(/[^0-9.,-]/g,'').replace(',','.'))||0
+    }));
+  DB.saveProductos([...prods,...nuevos]);
+  cerrarModal('modal-proveedor');
+  toast(`${nuevos.length} productos importados de ${nombre}`);
+  renderProveedores();renderProductos('');
+}
+
+// ══════════════ HELPERS ══════════════
+function numFmt(n){return Math.round(n).toLocaleString('es-AR')}
+
+// ══════════════ INIT ══════════════
+setTipo('FA');
+renderItems();
+document.getElementById('nav-date').textContent=new Date().toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
+
+// Cerrar autocomplete al hacer click afuera
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.autocomplete-wrap')) document.querySelectorAll('.autocomplete-list').forEach(a=>a.classList.remove('open'));
+  if(e.target.classList.contains('overlay')) e.target.classList.remove('open');
+});
+</script>
+</body>
+</html>
