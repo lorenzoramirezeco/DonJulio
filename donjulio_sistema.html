@@ -634,6 +634,10 @@ async function cargarTodo(){
 // Hace los upserts en lotes de 500 para soportar volúmenes grandes (23k+ productos).
 async function sincronizar(tabla,nuevos){
   if(!SB) return;
+  // Deduplicar defensivamente por id
+  const seen=new Map();
+  for(const item of nuevos){if(item&&item.id)seen.set(item.id,item);}
+  nuevos=[...seen.values()];
   const previo=cache[tabla];
   const idsNuevos=new Set(nuevos.map(x=>x.id));
   const idsPrevios=new Set(previo.map(x=>x.id));
@@ -672,21 +676,32 @@ const DB = {
 };
 
 // ══════════════ MIGRACIÓN desde localStorage ══════════════
+// Deduplica una lista por id, manteniendo la última ocurrencia
+function dedup(arr){
+  const map=new Map();
+  for(const item of arr){if(item&&item.id)map.set(item.id,item);}
+  return [...map.values()];
+}
+
 async function migrarDeLocalStorage(){
   if(!SB){toast('Supabase no está conectado','warn');return;}
   const get=k=>{try{return JSON.parse(localStorage.getItem('dp_'+k)||'null')}catch{return null}};
-  const cli=get('clientes')||[];
-  const pro=get('proveedores')||[];
-  const prd=get('productos')||[];
-  const com=get('comprobantes')||[];
+  // Leer y deduplicar
+  const cli=dedup(get('clientes')||[]);
+  const pro=dedup(get('proveedores')||[]);
+  const prd=dedup(get('productos')||[]);
+  const com=dedup(get('comprobantes')||[]);
   const totalLocal=cli.length+pro.length+prd.length+com.length;
   if(!totalLocal){toast('No hay datos locales para migrar','warn');return;}
-  if(!confirm(`Se van a subir a la nube:\n• ${cli.length} clientes\n• ${pro.length} proveedores\n• ${prd.length} productos\n• ${com.length} comprobantes\n\nEsto puede tardar 1–2 minutos con muchos productos.\n¿Continuar?`))return;
+  // Reportar duplicados encontrados (informativo)
+  const rawPrd=(get('productos')||[]).length;
+  const dupInfo=rawPrd>prd.length?`\n\n⚠ Detectados ${rawPrd-prd.length} productos duplicados — se subirá solo 1 copia de cada.`:'';
+  if(!confirm(`Se van a subir a la nube:\n• ${cli.length} clientes\n• ${pro.length} proveedores\n• ${prd.length} productos\n• ${com.length} comprobantes${dupInfo}\n\nEsto puede tardar 1–2 minutos con muchos productos.\n¿Continuar?`))return;
   try{
-    if(cli.length){toast(`Subiendo ${cli.length} clientes...`);await sincronizar('clientes',[...cache.clientes,...cli.filter(c=>!cache.clientes.find(x=>x.id===c.id))]);}
-    if(pro.length){toast(`Subiendo ${pro.length} proveedores...`);await sincronizar('proveedores',[...cache.proveedores,...pro.filter(c=>!cache.proveedores.find(x=>x.id===c.id))]);}
-    if(prd.length){toast(`Subiendo ${prd.length} productos (puede tardar)...`);await sincronizar('productos',[...cache.productos,...prd.filter(c=>!cache.productos.find(x=>x.id===c.id))]);}
-    if(com.length){toast(`Subiendo ${com.length} comprobantes...`);await sincronizar('comprobantes',[...cache.comprobantes,...com.filter(c=>!cache.comprobantes.find(x=>x.id===c.id))]);}
+    if(cli.length){toast(`Subiendo ${cli.length} clientes...`);await sincronizar('clientes',dedup([...cache.clientes,...cli]));}
+    if(pro.length){toast(`Subiendo ${pro.length} proveedores...`);await sincronizar('proveedores',dedup([...cache.proveedores,...pro]));}
+    if(prd.length){toast(`Subiendo ${prd.length} productos (puede tardar)...`);await sincronizar('productos',dedup([...cache.productos,...prd]));}
+    if(com.length){toast(`Subiendo ${com.length} comprobantes...`);await sincronizar('comprobantes',dedup([...cache.comprobantes,...com]));}
     toast(`✓ Migrado: ${totalLocal} registros subidos a la nube`);
     if(confirm('Migración exitosa.\n\n¿Borrar los datos locales antiguos?\n(Recomendado: SÍ — ya están en la nube)')){
       ['clientes','proveedores','productos','comprobantes'].forEach(k=>localStorage.removeItem('dp_'+k));
