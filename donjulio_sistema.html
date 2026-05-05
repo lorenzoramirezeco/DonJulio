@@ -99,6 +99,8 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
 .autocomplete-wrap{position:relative}
 .autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);z-index:100;max-height:200px;overflow-y:auto;margin-top:2px;display:none}
 .autocomplete-list.open{display:block}
+#cfg-menu.cfg-open{display:block!important}
+.cfg-item:hover{background:var(--green-l)}
 .ac-item{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
 .ac-item:last-child{border-bottom:none}
 .ac-item:hover{background:var(--green-l)}
@@ -192,11 +194,11 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
   <div class="nav-right" style="display:flex;align-items:center;gap:10px">
     <span id="nav-date"></span>
     <div style="position:relative">
-      <button onclick="document.getElementById('cfg-menu').classList.toggle('open')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--muted)">⚙️</button>
-      <div id="cfg-menu" class="autocomplete-list" style="right:0;left:auto;min-width:220px;top:34px">
-        <div class="ac-item" onclick="migrarDeLocalStorage();document.getElementById('cfg-menu').classList.remove('open')">☁️ Migrar datos locales a la nube</div>
-        <div class="ac-item" onclick="cargarTodo().then(()=>{renderTodo();toast('Datos recargados desde la nube')});document.getElementById('cfg-menu').classList.remove('open')">🔄 Recargar desde la nube</div>
-        <div class="ac-item" onclick="resetCredenciales()">🔑 Cambiar credenciales</div>
+      <button id="cfg-btn" onclick="event.stopPropagation();document.getElementById('cfg-menu').classList.toggle('cfg-open')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--muted)">⚙️</button>
+      <div id="cfg-menu" style="display:none;position:absolute;right:0;top:38px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);z-index:100;min-width:240px;box-shadow:0 4px 12px rgba(0,0,0,.1)">
+        <div class="cfg-item" onclick="migrarDeLocalStorage();document.getElementById('cfg-menu').classList.remove('cfg-open')" style="padding:10px 14px;cursor:pointer;font-size:13px">☁️ Migrar datos locales a la nube</div>
+        <div class="cfg-item" onclick="cargarTodo().then(()=>{renderTodo();toast('Datos recargados desde la nube')});document.getElementById('cfg-menu').classList.remove('cfg-open')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-top:1px solid var(--border)">🔄 Recargar desde la nube</div>
+        <div class="cfg-item" onclick="resetCredenciales()" style="padding:10px 14px;cursor:pointer;font-size:13px;border-top:1px solid var(--border)">🔑 Cambiar credenciales</div>
       </div>
     </div>
   </div>
@@ -629,22 +631,29 @@ async function cargarTodo(){
 
 // Hace upsert (insert si no existe, update si existe) de TODOS los items diferentes
 // y elimina los que ya no están. Compara por ID.
+// Hace los upserts en lotes de 500 para soportar volúmenes grandes (23k+ productos).
 async function sincronizar(tabla,nuevos){
   if(!SB) return;
   const previo=cache[tabla];
   const idsNuevos=new Set(nuevos.map(x=>x.id));
   const idsPrevios=new Set(previo.map(x=>x.id));
-  // Eliminar los que ya no están
+  // Eliminar los que ya no están (también en lotes)
   const aBorrar=[...idsPrevios].filter(id=>!idsNuevos.has(id));
   if(aBorrar.length){
-    const {error}=await SB.from(tabla).delete().in('id',aBorrar);
-    if(error)console.error(`Error borrando en ${tabla}:`,error);
+    for(let i=0;i<aBorrar.length;i+=500){
+      const lote=aBorrar.slice(i,i+500);
+      const {error}=await SB.from(tabla).delete().in('id',lote);
+      if(error)console.error(`Error borrando en ${tabla}:`,error);
+    }
   }
-  // Upsert de todos los nuevos (Supabase sabe si insertar o actualizar por la PK)
+  // Upsert de todos los nuevos en lotes de 500
   if(nuevos.length){
     const rows=nuevos.map(mapToDb[tabla]);
-    const {error}=await SB.from(tabla).upsert(rows);
-    if(error)console.error(`Error guardando en ${tabla}:`,error);
+    for(let i=0;i<rows.length;i+=500){
+      const lote=rows.slice(i,i+500);
+      const {error}=await SB.from(tabla).upsert(lote);
+      if(error){console.error(`Error guardando en ${tabla} (lote ${i}):`,error);throw error;}
+    }
   }
   cache[tabla]=nuevos.slice();
 }
@@ -672,20 +681,19 @@ async function migrarDeLocalStorage(){
   const com=get('comprobantes')||[];
   const totalLocal=cli.length+pro.length+prd.length+com.length;
   if(!totalLocal){toast('No hay datos locales para migrar','warn');return;}
-  if(!confirm(`Se van a subir a la nube:\n• ${cli.length} clientes\n• ${pro.length} proveedores\n• ${prd.length} productos\n• ${com.length} comprobantes\n\n¿Continuar?`))return;
-  toast('Subiendo datos a la nube...');
+  if(!confirm(`Se van a subir a la nube:\n• ${cli.length} clientes\n• ${pro.length} proveedores\n• ${prd.length} productos\n• ${com.length} comprobantes\n\nEsto puede tardar 1–2 minutos con muchos productos.\n¿Continuar?`))return;
   try{
-    if(cli.length)await sincronizar('clientes',[...cache.clientes,...cli.filter(c=>!cache.clientes.find(x=>x.id===c.id))]);
-    if(pro.length)await sincronizar('proveedores',[...cache.proveedores,...pro.filter(c=>!cache.proveedores.find(x=>x.id===c.id))]);
-    if(prd.length)await sincronizar('productos',[...cache.productos,...prd.filter(c=>!cache.productos.find(x=>x.id===c.id))]);
-    if(com.length)await sincronizar('comprobantes',[...cache.comprobantes,...com.filter(c=>!cache.comprobantes.find(x=>x.id===c.id))]);
+    if(cli.length){toast(`Subiendo ${cli.length} clientes...`);await sincronizar('clientes',[...cache.clientes,...cli.filter(c=>!cache.clientes.find(x=>x.id===c.id))]);}
+    if(pro.length){toast(`Subiendo ${pro.length} proveedores...`);await sincronizar('proveedores',[...cache.proveedores,...pro.filter(c=>!cache.proveedores.find(x=>x.id===c.id))]);}
+    if(prd.length){toast(`Subiendo ${prd.length} productos (puede tardar)...`);await sincronizar('productos',[...cache.productos,...prd.filter(c=>!cache.productos.find(x=>x.id===c.id))]);}
+    if(com.length){toast(`Subiendo ${com.length} comprobantes...`);await sincronizar('comprobantes',[...cache.comprobantes,...com.filter(c=>!cache.comprobantes.find(x=>x.id===c.id))]);}
     toast(`✓ Migrado: ${totalLocal} registros subidos a la nube`);
     if(confirm('Migración exitosa.\n\n¿Borrar los datos locales antiguos?\n(Recomendado: SÍ — ya están en la nube)')){
       ['clientes','proveedores','productos','comprobantes'].forEach(k=>localStorage.removeItem('dp_'+k));
       toast('Datos locales borrados. Todo vive ahora en la nube.');
     }
     renderTodo();
-  }catch(e){alert('Error en la migración: '+e.message);}
+  }catch(e){console.error(e);alert('Error en la migración: '+(e.message||e));}
 }
 
 function resetCredenciales(){
@@ -1330,6 +1338,11 @@ function numFmt(n){return Math.round(n).toLocaleString('es-AR')}
 document.addEventListener('click',e=>{
   if(!e.target.closest('.autocomplete-wrap')) document.querySelectorAll('.autocomplete-list').forEach(a=>a.classList.remove('open'));
   if(e.target.classList.contains('overlay')) e.target.classList.remove('open');
+  // Cerrar menú config si se hace click afuera
+  if(!e.target.closest('#cfg-menu')&&e.target.id!=='cfg-btn'){
+    const cfg=document.getElementById('cfg-menu');
+    if(cfg)cfg.classList.remove('cfg-open');
+  }
 });
 </script>
 </body>
