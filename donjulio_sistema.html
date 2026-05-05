@@ -189,7 +189,17 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
     <button class="nav-tab" onclick="goPage('clientes')">Clientes</button>
     <button class="nav-tab" onclick="goPage('proveedores')">Proveedores</button>
   </div>
-  <div class="nav-right" id="nav-date"></div>
+  <div class="nav-right" style="display:flex;align-items:center;gap:10px">
+    <span id="nav-date"></span>
+    <div style="position:relative">
+      <button onclick="document.getElementById('cfg-menu').classList.toggle('open')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--muted)">⚙️</button>
+      <div id="cfg-menu" class="autocomplete-list" style="right:0;left:auto;min-width:220px;top:34px">
+        <div class="ac-item" onclick="migrarDeLocalStorage();document.getElementById('cfg-menu').classList.remove('open')">☁️ Migrar datos locales a la nube</div>
+        <div class="ac-item" onclick="cargarTodo().then(()=>{renderTodo();toast('Datos recargados desde la nube')});document.getElementById('cfg-menu').classList.remove('open')">🔄 Recargar desde la nube</div>
+        <div class="ac-item" onclick="resetCredenciales()">🔑 Cambiar credenciales</div>
+      </div>
+    </div>
+  </div>
 </nav>
 
 <!-- ══════════════════════════════════════
@@ -548,20 +558,151 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
 .active-type-purple{background:var(--purple-l);color:var(--purple-d);border-color:var(--purple);font-weight:500}
 </style>
 
+<!-- Cliente Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-// ══════════════ DB (localStorage) ══════════════
-const DB = {
-  get(k){try{return JSON.parse(localStorage.getItem('dp_'+k)||'null')}catch{return null}},
-  set(k,v){localStorage.setItem('dp_'+k,JSON.stringify(v))},
-  clientes(){return this.get('clientes')||[]},
-  proveedores(){return this.get('proveedores')||[]},
-  productos(){return this.get('productos')||[]},
-  comprobantes(){return this.get('comprobantes')||[]},
-  saveClientes(v){this.set('clientes',v)},
-  saveProveedores(v){this.set('proveedores',v)},
-  saveProductos(v){this.set('productos',v)},
-  saveComprobantes(v){this.set('comprobantes',v)},
+// ══════════════ CONFIGURACIÓN SUPABASE ══════════════
+// Las credenciales se piden la primera vez y se guardan en localStorage del navegador
+function pedirCredenciales(){
+  const url=prompt('Pegá la Project URL de Supabase\n(ej: https://xxx.supabase.co)');
+  if(!url) return null;
+  const key=prompt('Pegá la Publishable Key de Supabase\n(empieza con sb_publishable_...)');
+  if(!key) return null;
+  localStorage.setItem('sb_url',url.trim());
+  localStorage.setItem('sb_key',key.trim());
+  return {url:url.trim(),key:key.trim()};
+}
+
+let SB=null;
+function initSupabase(){
+  let url=localStorage.getItem('sb_url');
+  let key=localStorage.getItem('sb_key');
+  if(!url||!key){
+    const c=pedirCredenciales();
+    if(!c){alert('Sin credenciales el sistema no puede funcionar. Recargá la página para intentar de nuevo.');return false;}
+    url=c.url;key=c.key;
+  }
+  try{
+    SB=supabase.createClient(url,key);
+    return true;
+  }catch(e){
+    alert('Error al conectar con Supabase: '+e.message);
+    localStorage.removeItem('sb_url');localStorage.removeItem('sb_key');
+    return false;
+  }
+}
+
+// ══════════════ DB (caché local + sync con Supabase) ══════════════
+// Mantenemos una caché en memoria que se sincroniza con la nube.
+// Las funciones públicas son idénticas a la versión localStorage para no romper nada.
+const cache={clientes:[],proveedores:[],productos:[],comprobantes:[]};
+let cacheReady=false;
+
+// Mapeo entre nombres camelCase de la app y snake_case de Postgres
+const mapToDb={
+  clientes:r=>({id:r.id,nombre:r.nombre,cuit:r.cuit||null,tel:r.tel||null,domicilio:r.domicilio||null,iva:r.iva||'Consumidor Final',tipo:r.tipo||'FB'}),
+  proveedores:r=>({id:r.id,nombre:r.nombre,prefijo:r.prefijo||null,fecha:r.fecha||null}),
+  productos:r=>({id:r.id,proveedor_id:r.proveedorId||null,proveedor_nombre:r.proveedorNombre||null,prefijo:r.prefijo||null,nombre:r.nombre,codigo:r.codigo||null,precio:r.precio||0}),
+  comprobantes:r=>({id:r.id,cliente_id:r.clienteId||null,cliente_nombre:r.clienteNombre||null,cliente_cuit:r.clienteCuit||null,cliente_domicilio:r.clienteDomicilio||null,cliente_iva:r.clienteIva||null,tipo:r.tipo||null,estado:r.estado||null,numero:r.numero||null,condicion:r.condicion||'contado',fecha:r.fecha||null,items:r.items||[],total:r.total||0})
 };
+const mapFromDb={
+  clientes:r=>({id:r.id,nombre:r.nombre,cuit:r.cuit||'',tel:r.tel||'',domicilio:r.domicilio||'',iva:r.iva||'Consumidor Final',tipo:r.tipo||'FB'}),
+  proveedores:r=>({id:r.id,nombre:r.nombre,prefijo:r.prefijo||'',fecha:r.fecha||''}),
+  productos:r=>({id:r.id,proveedorId:r.proveedor_id||'',proveedorNombre:r.proveedor_nombre||'',prefijo:r.prefijo||'',nombre:r.nombre,codigo:r.codigo||'',precio:Number(r.precio)||0}),
+  comprobantes:r=>({id:r.id,clienteId:r.cliente_id||'',clienteNombre:r.cliente_nombre||'',clienteCuit:r.cliente_cuit||'',clienteDomicilio:r.cliente_domicilio||'',clienteIva:r.cliente_iva||'',tipo:r.tipo||'',estado:r.estado||'',numero:r.numero||'',condicion:r.condicion||'contado',fecha:r.fecha||'',items:r.items||[],total:Number(r.total)||0})
+};
+
+async function cargarTodo(){
+  if(!SB) return;
+  try{
+    const tables=['clientes','proveedores','productos','comprobantes'];
+    for(const t of tables){
+      const {data,error}=await SB.from(t).select('*');
+      if(error){console.error(`Error cargando ${t}:`,error);continue;}
+      cache[t]=(data||[]).map(mapFromDb[t]);
+    }
+    cacheReady=true;
+    console.log('✓ Datos cargados desde Supabase',cache);
+  }catch(e){console.error('Error cargarTodo:',e);}
+}
+
+// Hace upsert (insert si no existe, update si existe) de TODOS los items diferentes
+// y elimina los que ya no están. Compara por ID.
+async function sincronizar(tabla,nuevos){
+  if(!SB) return;
+  const previo=cache[tabla];
+  const idsNuevos=new Set(nuevos.map(x=>x.id));
+  const idsPrevios=new Set(previo.map(x=>x.id));
+  // Eliminar los que ya no están
+  const aBorrar=[...idsPrevios].filter(id=>!idsNuevos.has(id));
+  if(aBorrar.length){
+    const {error}=await SB.from(tabla).delete().in('id',aBorrar);
+    if(error)console.error(`Error borrando en ${tabla}:`,error);
+  }
+  // Upsert de todos los nuevos (Supabase sabe si insertar o actualizar por la PK)
+  if(nuevos.length){
+    const rows=nuevos.map(mapToDb[tabla]);
+    const {error}=await SB.from(tabla).upsert(rows);
+    if(error)console.error(`Error guardando en ${tabla}:`,error);
+  }
+  cache[tabla]=nuevos.slice();
+}
+
+const DB = {
+  // Lectura: directo de la caché en memoria (instantáneo)
+  clientes(){return cache.clientes},
+  proveedores(){return cache.proveedores},
+  productos(){return cache.productos},
+  comprobantes(){return cache.comprobantes},
+  // Escritura: actualiza caché y sincroniza con Supabase en background
+  saveClientes(v){sincronizar('clientes',v)},
+  saveProveedores(v){sincronizar('proveedores',v)},
+  saveProductos(v){sincronizar('productos',v)},
+  saveComprobantes(v){sincronizar('comprobantes',v)},
+};
+
+// ══════════════ MIGRACIÓN desde localStorage ══════════════
+async function migrarDeLocalStorage(){
+  if(!SB){toast('Supabase no está conectado','warn');return;}
+  const get=k=>{try{return JSON.parse(localStorage.getItem('dp_'+k)||'null')}catch{return null}};
+  const cli=get('clientes')||[];
+  const pro=get('proveedores')||[];
+  const prd=get('productos')||[];
+  const com=get('comprobantes')||[];
+  const totalLocal=cli.length+pro.length+prd.length+com.length;
+  if(!totalLocal){toast('No hay datos locales para migrar','warn');return;}
+  if(!confirm(`Se van a subir a la nube:\n• ${cli.length} clientes\n• ${pro.length} proveedores\n• ${prd.length} productos\n• ${com.length} comprobantes\n\n¿Continuar?`))return;
+  toast('Subiendo datos a la nube...');
+  try{
+    if(cli.length)await sincronizar('clientes',[...cache.clientes,...cli.filter(c=>!cache.clientes.find(x=>x.id===c.id))]);
+    if(pro.length)await sincronizar('proveedores',[...cache.proveedores,...pro.filter(c=>!cache.proveedores.find(x=>x.id===c.id))]);
+    if(prd.length)await sincronizar('productos',[...cache.productos,...prd.filter(c=>!cache.productos.find(x=>x.id===c.id))]);
+    if(com.length)await sincronizar('comprobantes',[...cache.comprobantes,...com.filter(c=>!cache.comprobantes.find(x=>x.id===c.id))]);
+    toast(`✓ Migrado: ${totalLocal} registros subidos a la nube`);
+    if(confirm('Migración exitosa.\n\n¿Borrar los datos locales antiguos?\n(Recomendado: SÍ — ya están en la nube)')){
+      ['clientes','proveedores','productos','comprobantes'].forEach(k=>localStorage.removeItem('dp_'+k));
+      toast('Datos locales borrados. Todo vive ahora en la nube.');
+    }
+    renderTodo();
+  }catch(e){alert('Error en la migración: '+e.message);}
+}
+
+function resetCredenciales(){
+  if(!confirm('Esto va a desconectar este dispositivo de Supabase.\n¿Seguro?'))return;
+  localStorage.removeItem('sb_url');
+  localStorage.removeItem('sb_key');
+  location.reload();
+}
+
+function renderTodo(){
+  try{
+    if(typeof renderClientes==='function')renderClientes('');
+    if(typeof renderProveedores==='function')renderProveedores();
+    if(typeof renderProductos==='function')renderProductos('');
+    if(typeof renderCC==='function')renderCC('');
+  }catch(e){console.error(e);}
+}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
@@ -1171,9 +1312,19 @@ function confirmarImportacion(){
 function numFmt(n){return Math.round(n).toLocaleString('es-AR')}
 
 // ══════════════ INIT ══════════════
-setTipo('FA');
-renderItems();
-document.getElementById('nav-date').textContent=new Date().toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
+(async function inicio(){
+  if(!initSupabase()){
+    document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:sans-serif"><h2>Sin conexión a Supabase</h2><p>Recargá la página para ingresar las credenciales.</p><button onclick="location.reload()" style="padding:10px 20px;font-size:14px;cursor:pointer">Recargar</button></div>';
+    return;
+  }
+  toast('Cargando datos desde la nube...');
+  await cargarTodo();
+  setTipo('FA');
+  renderItems();
+  renderTodo();
+  document.getElementById('nav-date').textContent=new Date().toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
+  toast('✓ Conectado a la nube');
+})();
 
 // Cerrar autocomplete al hacer click afuera
 document.addEventListener('click',e=>{
