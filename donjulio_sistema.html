@@ -196,9 +196,8 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
     <div style="position:relative">
       <button id="cfg-btn" onclick="event.stopPropagation();document.getElementById('cfg-menu').classList.toggle('cfg-open')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--muted)">⚙️</button>
       <div id="cfg-menu" style="display:none;position:absolute;right:0;top:38px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);z-index:100;min-width:240px;box-shadow:0 4px 12px rgba(0,0,0,.1)">
-        <div class="cfg-item" onclick="migrarDeLocalStorage();document.getElementById('cfg-menu').classList.remove('cfg-open')" style="padding:10px 14px;cursor:pointer;font-size:13px">☁️ Migrar datos locales a la nube</div>
-        <div class="cfg-item" onclick="cargarTodo().then(()=>{renderTodo();toast('Datos recargados desde la nube')});document.getElementById('cfg-menu').classList.remove('cfg-open')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-top:1px solid var(--border)">🔄 Recargar desde la nube</div>
-        <div class="cfg-item" onclick="resetCredenciales()" style="padding:10px 14px;cursor:pointer;font-size:13px;border-top:1px solid var(--border)">🔑 Cambiar credenciales</div>
+        <div class="cfg-item" onclick="cargarTodo().then(()=>{renderTodo();toast('Datos recargados desde la nube')});document.getElementById('cfg-menu').classList.remove('cfg-open')" style="padding:10px 14px;cursor:pointer;font-size:13px">🔄 Recargar desde la nube</div>
+        <div class="cfg-item" onclick="cerrarSesion()" style="padding:10px 14px;cursor:pointer;font-size:13px;border-top:1px solid var(--border)">🚪 Cerrar sesión</div>
       </div>
     </div>
   </div>
@@ -565,32 +564,84 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
 
 <script>
 // ══════════════ CONFIGURACIÓN SUPABASE ══════════════
-// Las credenciales se piden la primera vez y se guardan en localStorage del navegador
-function pedirCredenciales(){
-  const url=prompt('Pegá la Project URL de Supabase\n(ej: https://xxx.supabase.co)');
-  if(!url) return null;
-  const key=prompt('Pegá la Publishable Key de Supabase\n(empieza con sb_publishable_...)');
-  if(!key) return null;
-  localStorage.setItem('sb_url',url.trim());
-  localStorage.setItem('sb_key',key.trim());
-  return {url:url.trim(),key:key.trim()};
+// Credenciales fijas — son seguras de incluir aquí porque la "publishable key"
+// está diseñada para vivir en el navegador. La protección real es la pantalla de login.
+const SB_URL='https://myzalmfqztkgjfwojdwn.supabase.co';
+const SB_KEY='sb_publishable_OrG3Ya6Ywpmg5vmdtAwyCg_YZuwYqZM';
+
+// ══════════════ LOGIN ══════════════
+const USUARIO_VALIDO='don pepe';
+const PASSWORD_VALIDO='ferreteria2026';
+const SESSION_KEY='dp_session_active';
+
+function chequearSesion(){
+  return localStorage.getItem(SESSION_KEY)==='ok';
+}
+
+function mostrarLogin(){
+  document.body.innerHTML=`
+    <div style="position:fixed;inset:0;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-family:'Instrument Sans',sans-serif">
+      <div style="background:#fff;border-radius:16px;padding:36px 40px;box-shadow:0 8px 32px rgba(0,0,0,.08);width:340px;max-width:90vw">
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#1a1a1a">Don Pepe</div>
+          <div style="font-size:13px;color:#888;margin-top:4px">Sistema de gestión</div>
+        </div>
+        <form id="login-form" onsubmit="return doLogin(event)">
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;color:#555;margin-bottom:6px;font-weight:500">Usuario</label>
+            <input type="text" id="login-user" autocomplete="username" autofocus style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;background:#fafafa">
+          </div>
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;color:#555;margin-bottom:6px;font-weight:500">Contraseña</label>
+            <input type="password" id="login-pass" autocomplete="current-password" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;background:#fafafa">
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#666;margin-bottom:18px;cursor:pointer">
+            <input type="checkbox" id="login-remember" checked style="cursor:pointer">
+            Recordarme en este dispositivo
+          </label>
+          <button type="submit" style="width:100%;padding:11px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Entrar</button>
+          <div id="login-error" style="color:#c00;font-size:13px;text-align:center;margin-top:12px;display:none">Usuario o contraseña incorrectos</div>
+        </form>
+      </div>
+    </div>`;
+}
+
+function doLogin(ev){
+  ev.preventDefault();
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value;
+  const remember=document.getElementById('login-remember').checked;
+  if(u===USUARIO_VALIDO&&p===PASSWORD_VALIDO){
+    if(remember){
+      localStorage.setItem(SESSION_KEY,'ok');
+    }else{
+      sessionStorage.setItem(SESSION_KEY,'ok');
+    }
+    location.reload();
+  }else{
+    document.getElementById('login-error').style.display='block';
+  }
+  return false;
+}
+
+function chequearSesionCompleta(){
+  return localStorage.getItem(SESSION_KEY)==='ok'||sessionStorage.getItem(SESSION_KEY)==='ok';
+}
+
+function cerrarSesion(){
+  if(!confirm('¿Cerrar sesión en este dispositivo?'))return;
+  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
 }
 
 let SB=null;
 function initSupabase(){
-  let url=localStorage.getItem('sb_url');
-  let key=localStorage.getItem('sb_key');
-  if(!url||!key){
-    const c=pedirCredenciales();
-    if(!c){alert('Sin credenciales el sistema no puede funcionar. Recargá la página para intentar de nuevo.');return false;}
-    url=c.url;key=c.key;
-  }
   try{
-    SB=supabase.createClient(url,key);
+    SB=supabase.createClient(SB_URL,SB_KEY);
     return true;
   }catch(e){
     alert('Error al conectar con Supabase: '+e.message);
-    localStorage.removeItem('sb_url');localStorage.removeItem('sb_key');
     return false;
   }
 }
@@ -1336,10 +1387,17 @@ function numFmt(n){return Math.round(n).toLocaleString('es-AR')}
 
 // ══════════════ INIT ══════════════
 (async function inicio(){
-  if(!initSupabase()){
-    document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:sans-serif"><h2>Sin conexión a Supabase</h2><p>Recargá la página para ingresar las credenciales.</p><button onclick="location.reload()" style="padding:10px 20px;font-size:14px;cursor:pointer">Recargar</button></div>';
+  // 1. Chequear sesión: si no hay, mostrar login y salir
+  if(!chequearSesionCompleta()){
+    mostrarLogin();
     return;
   }
+  // 2. Conectar a Supabase
+  if(!initSupabase()){
+    document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:sans-serif"><h2>Error de conexión</h2><p>Recargá la página para intentar de nuevo.</p><button onclick="location.reload()" style="padding:10px 20px;font-size:14px;cursor:pointer">Recargar</button></div>';
+    return;
+  }
+  // 3. Cargar datos y arrancar la app
   toast('Cargando datos desde la nube...');
   await cargarTodo();
   setTipo('FA');
