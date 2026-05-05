@@ -347,8 +347,9 @@ function init(){
     total+=subtotal;
     const row=document.createElement('div');
     row.className='item-row';
+    const qtyLabel=(it.unidad&&it.unidad!=='u')?`${it.qty} ${it.unidad}`:it.qty;
     row.innerHTML=`
-      <div class="c">${it.qty}</div>
+      <div class="c">${qtyLabel}</div>
       <div class="prod"><span class="pfx">${it.prefijo||''}</span>${it.nombre}</div>
       <div class="r">$ ${numFmt(it.precio)}</div>
       <div class="r">$ ${numFmt(subtotal)}</div>

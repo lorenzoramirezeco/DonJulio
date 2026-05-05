@@ -242,7 +242,8 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
       <thead>
         <tr>
           <th>Producto</th>
-          <th style="width:110px">Cantidad</th>
+          <th style="width:80px">Cantidad</th>
+          <th style="width:90px">Unidad</th>
           <th class="r" style="width:120px">Precio unit.</th>
           <th class="r" style="width:100px">Total</th>
           <th style="width:32px"></th>
@@ -535,7 +536,7 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
     </div>
     <div class="modal-footer no-print">
       <button class="btn" onclick="cerrarModal('modal-comprobante')">Cerrar</button>
-      <button class="btn btn-primary" onclick="window.print()">Imprimir</button>
+      <button class="btn btn-primary" onclick="imprimirComprobante()">Imprimir</button>
     </div>
   </div>
 </div>
@@ -655,8 +656,9 @@ function buscarItem(val){
   const ac=document.getElementById('item-ac');
   if(!val){ac.classList.remove('open');return}
   const prods=DB.productos().filter(p=>
-    p.nombre.toLowerCase().includes(val.toLowerCase())||
-    (p.codigo||'').toLowerCase().includes(val.toLowerCase())
+    (p.nombre.toLowerCase().includes(val.toLowerCase())||
+    (p.codigo||'').toLowerCase().includes(val.toLowerCase()))
+    && p.precio>0
   );
   if(!prods.length){ac.classList.remove('open');return}
   ac.innerHTML=prods.slice(0,12).map(p=>`<div class="ac-item" onclick="agregarItem('${p.id}')">
@@ -675,7 +677,7 @@ function agregarItem(prodId){
   if(!p) return;
   const existe=itemsActuales.find(x=>x.prodId===prodId);
   if(existe){existe.qty++;renderItems();return;}
-  itemsActuales.push({prodId,nombre:p.nombre,prefijo:p.prefijo,precio:p.precio,qty:1});
+  itemsActuales.push({prodId,nombre:p.nombre,prefijo:p.prefijo,precio:p.precio,qty:1,unidad:'u'});
   renderItems();
   document.getElementById('item-input').value='';
   document.getElementById('item-ac').classList.remove('open');
@@ -683,14 +685,19 @@ function agregarItem(prodId){
 
 function renderItems(){
   const tbody=document.getElementById('items-tbody');
-  if(!itemsActuales.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:16px">Sin productos todavía</td></tr>';actualizarTotal();return;}
+  if(!itemsActuales.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--faint);padding:16px">Sin productos todavía</td></tr>';actualizarTotal();return;}
   tbody.innerHTML=itemsActuales.map((it,i)=>`<tr>
     <td><span class="pfx">${it.prefijo}</span>${it.nombre}</td>
-    <td><div class="qty-ctrl">
-      <button class="qty-btn" onclick="cambiarQty(${i},-1)">−</button>
-      <span style="min-width:24px;text-align:center;font-family:'DM Mono',monospace">${it.qty}</span>
-      <button class="qty-btn" onclick="cambiarQty(${i},1)">+</button>
-    </div></td>
+    <td><input type="number" step="0.01" min="0" value="${it.qty}" onchange="setQty(${i},this.value)" style="width:70px;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);text-align:right"></td>
+    <td><select onchange="setUnidad(${i},this.value)" style="width:80px;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text)">
+      <option value="u" ${(it.unidad||'u')==='u'?'selected':''}>u</option>
+      <option value="mts" ${it.unidad==='mts'?'selected':''}>mts</option>
+      <option value="m2" ${it.unidad==='m2'?'selected':''}>m²</option>
+      <option value="kg" ${it.unidad==='kg'?'selected':''}>kg</option>
+      <option value="lts" ${it.unidad==='lts'?'selected':''}>lts</option>
+      <option value="doc" ${it.unidad==='doc'?'selected':''}>doc</option>
+      <option value="caja" ${it.unidad==='caja'?'selected':''}>caja</option>
+    </select></td>
     <td class="r" style="font-family:'DM Mono',monospace">$${numFmt(it.precio)}</td>
     <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(it.precio*it.qty)}</td>
     <td><button class="btn btn-xs" style="color:var(--red);border-color:var(--red);background:var(--red-l)" onclick="quitarItem(${i})">✕</button></td>
@@ -698,8 +705,16 @@ function renderItems(){
   actualizarTotal();
 }
 
+function setQty(i,v){
+  const n=parseFloat(v)||0;
+  itemsActuales[i].qty=n>0?n:1;
+  renderItems();
+}
+function setUnidad(i,u){
+  itemsActuales[i].unidad=u;
+}
 function cambiarQty(i,d){
-  itemsActuales[i].qty=Math.max(1,itemsActuales[i].qty+d);
+  itemsActuales[i].qty=Math.max(1,(itemsActuales[i].qty||1)+d);
   renderItems();
 }
 function quitarItem(i){itemsActuales.splice(i,1);renderItems();}
@@ -715,7 +730,7 @@ function guardarCC(){
     id:uid(),clienteId:clienteActual.id,clienteNombre:clienteActual.nombre,
     tipo:tipoActual,estado:'pendiente',
     fecha:new Date().toLocaleDateString('es-AR'),
-    items:itemsActuales.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty}))
+    items:itemsActuales.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty,unidad:it.unidad||'u'}))
   };
   const comps=DB.comprobantes();comps.push(comp);DB.saveComprobantes(comps);
   toast(`Guardado en cuenta corriente de ${clienteActual.nombre}`);
@@ -732,9 +747,12 @@ function emitirAhora(){
   const nro=nextNro(tipoActual);
   const comp={
     id:uid(),clienteId:clienteActual.id,clienteNombre:clienteActual.nombre,
+    clienteCuit:clienteActual.cuit||'',clienteDomicilio:clienteActual.domicilio||'',
+    clienteIva:clienteActual.iva||'Consumidor Final',
     tipo:tipoActual,estado:'emitido',numero:nro,
+    condicion:'contado',
     fecha:new Date().toLocaleDateString('es-AR'),
-    items:items.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty,precio:it.precio})),
+    items:items.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty,unidad:it.unidad||'u',precio:it.precio})),
     total:items.reduce((s,it)=>s+it.precio*it.qty,0)
   };
   const comps=DB.comprobantes();comps.push(comp);DB.saveComprobantes(comps);
@@ -895,20 +913,31 @@ function emitirTodos(){
 }
 
 // ══════════════ COMPROBANTE ══════════════
+let compActualId=null;
 function mostrarComprobante(comp){
   if(!comp) return;
+  compActualId=comp.id;
   const tipoLabel=comp.tipo==='FA'?'Factura A':comp.tipo==='FB'?'Factura B':'Boleta interna';
   document.getElementById('comp-titulo').textContent=`${tipoLabel} ${comp.numero||''}`;
   document.getElementById('comp-subtitulo').textContent=`${comp.clienteNombre} · ${comp.fecha}`;
-  document.getElementById('comp-tbody').innerHTML=comp.items.map(it=>`<tr>
-    <td><span class="pfx">${it.prefijo}</span>${it.nombre}</td>
-    <td class="r">${it.qty}</td>
-    <td class="r" style="font-family:'DM Mono',monospace">$${numFmt(it.precio)}</td>
-    <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(it.precio*it.qty)}</td>
-  </tr>`).join('');
+  document.getElementById('comp-tbody').innerHTML=comp.items.map(it=>{
+    const qtyTxt=(it.unidad&&it.unidad!=='u')?`${it.qty} ${it.unidad}`:it.qty;
+    return `<tr>
+      <td><span class="pfx">${it.prefijo}</span>${it.nombre}</td>
+      <td class="r">${qtyTxt}</td>
+      <td class="r" style="font-family:'DM Mono',monospace">$${numFmt(it.precio)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(it.precio*it.qty)}</td>
+    </tr>`;
+  }).join('');
   document.getElementById('comp-total').textContent='$'+numFmt(comp.total);
   cerrarModal('modal-cc');
   abrirModal('modal-comprobante');
+}
+
+function imprimirComprobante(){
+  if(!compActualId){window.print();return;}
+  // Abre la boleta formal en una pestaña nueva
+  window.open(`boleta_donpepe.html?id=${compActualId}`,'_blank');
 }
 
 // ══════════════ CLIENTES ══════════════
@@ -1096,14 +1125,15 @@ function buildPreview(){
   const colPrecio=parseInt(document.getElementById('pv-col-precio').value);
   const colCod=parseInt(document.getElementById('pv-col-cod').value);
   const filaInicio=parseInt(document.getElementById('pv-fila-inicio').value)||2;
-  const rows=xlsxData.slice(filaInicio-1).filter(r=>r[colDesc]&&r[colPrecio]).slice(0,5);
+  const parsePrev=v=>parseFloat(String(v).replace(/[^0-9.,-]/g,'').replace(',','.'))||0;
+  const rows=xlsxData.slice(filaInicio-1).filter(r=>r[colDesc]&&r[colPrecio]&&parsePrev(r[colPrecio])>0).slice(0,5);
   const tbody=document.getElementById('pv-preview-tbody');
   tbody.innerHTML=rows.map(r=>`<tr>
     <td><span class="pfx">${pfx}</span>${r[colDesc]}</td>
     <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--faint)">${colCod>=0?r[colCod]:'—'}</td>
-    <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(parseFloat(String(r[colPrecio]).replace(/[^0-9.,-]/g,'').replace(',','.'))||0)}</td>
+    <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(parsePrev(r[colPrecio]))}</td>
   </tr>`).join('');
-  const total=xlsxData.slice(filaInicio-1).filter(r=>r[colDesc]&&r[colPrecio]).length;
+  const total=xlsxData.slice(filaInicio-1).filter(r=>r[colDesc]&&r[colPrecio]&&parsePrev(r[colPrecio])>0).length;
   document.getElementById('pv-total-count').textContent=`Se importarán ${total} productos en total.`;
 }
 
@@ -1122,13 +1152,14 @@ function confirmarImportacion(){
   DB.saveProveedores(provs);
   // productos
   let prods=DB.productos().filter(p=>p.proveedorId!==provId);
+  const parsePrecio=v=>parseFloat(String(v).replace(/[^0-9.,-]/g,'').replace(',','.'))||0;
   const nuevos=xlsxData.slice(filaInicio-1)
-    .filter(r=>r[colDesc]&&r[colPrecio])
+    .filter(r=>r[colDesc]&&r[colPrecio]&&parsePrecio(r[colPrecio])>0)
     .map(r=>({
       id:uid(),proveedorId:provId,proveedorNombre:nombre,prefijo:pfx,
       nombre:String(r[colDesc]).trim(),
       codigo:colCod>=0?String(r[colCod]).trim():'',
-      precio:parseFloat(String(r[colPrecio]).replace(/[^0-9.,-]/g,'').replace(',','.'))||0
+      precio:parsePrecio(r[colPrecio])
     }));
   DB.saveProductos([...prods,...nuevos]);
   cerrarModal('modal-proveedor');
