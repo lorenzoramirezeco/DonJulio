@@ -251,19 +251,37 @@ body{font-family:'Arial',sans-serif;background:#f0f0f0;padding:20px}
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// Leer datos desde localStorage (misma DB que el sistema)
-function getData(k){try{return JSON.parse(localStorage.getItem('dp_'+k)||'null')}catch{return null}}
+// Credenciales de Supabase (mismas que el sistema)
+const SB_URL='https://myzalmfqztkgjfwojdwn.supabase.co';
+const SB_KEY='sb_publishable_OrG3Ya6Ywpmg5vmdtAwyCg_YZuwYqZM';
+const SB=supabase.createClient(SB_URL,SB_KEY);
 
 function numFmt(n){
   return Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
-function init(){
+// Mapea fila de Postgres (snake_case) al formato camelCase que usa la boleta
+function mapComp(r){
+  return {
+    id:r.id,clienteId:r.cliente_id,clienteNombre:r.cliente_nombre,
+    clienteCuit:r.cliente_cuit,clienteDomicilio:r.cliente_domicilio,clienteIva:r.cliente_iva,
+    tipo:r.tipo,estado:r.estado,numero:r.numero,condicion:r.condicion,
+    fecha:r.fecha,items:r.items||[],total:Number(r.total)||0
+  };
+}
+
+async function init(){
   const params=new URLSearchParams(window.location.search);
   const compId=params.get('id');
-  const comps=getData('comprobantes')||[];
-  const comp=compId?comps.find(c=>c.id===compId):null;
+  let comp=null;
+  if(compId){
+    try{
+      const {data,error}=await SB.from('comprobantes').select('*').eq('id',compId).single();
+      if(!error&&data)comp=mapComp(data);
+    }catch(e){console.error('Error cargando comprobante:',e);}
+  }
 
   // Si no hay comprobante, mostrar demo con datos de ejemplo
   const data=comp||{
@@ -347,9 +365,8 @@ function init(){
     total+=subtotal;
     const row=document.createElement('div');
     row.className='item-row';
-    const qtyLabel=(it.unidad&&it.unidad!=='u')?`${it.qty} ${it.unidad}`:it.qty;
     row.innerHTML=`
-      <div class="c">${qtyLabel}</div>
+      <div class="c">${it.qty}</div>
       <div class="prod"><span class="pfx">${it.prefijo||''}</span>${it.nombre}</div>
       <div class="r">$ ${numFmt(it.precio)}</div>
       <div class="r">$ ${numFmt(subtotal)}</div>
