@@ -188,7 +188,6 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="goPage('ventas')">Nueva venta</button>
     <button class="nav-tab" onclick="goPage('cc')">Cuenta corriente</button>
-    <button class="nav-tab" onclick="goPage('notas')">Notas</button>
     <button class="nav-tab" onclick="goPage('clientes')">Clientes</button>
     <button class="nav-tab" onclick="goPage('proveedores')">Proveedores</button>
   </div>
@@ -215,10 +214,33 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
   <!-- Tipo de comprobante -->
   <div class="card">
     <div class="card-title">Tipo de comprobante</div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn active-type" id="t-fa" onclick="setTipo('FA')">Factura A</button>
       <button class="btn" id="t-fb" onclick="setTipo('FB')">Factura B</button>
       <button class="btn" id="t-bo" onclick="setTipo('BO')">Boleta interna</button>
+      <span style="width:1px;background:var(--border);margin:0 4px"></span>
+      <button class="btn" id="t-nca" onclick="setTipo('NCA')">N. Crédito A</button>
+      <button class="btn" id="t-ncb" onclick="setTipo('NCB')">N. Crédito B</button>
+      <button class="btn" id="t-nda" onclick="setTipo('NDA')">N. Débito A</button>
+      <button class="btn" id="t-ndb" onclick="setTipo('NDB')">N. Débito B</button>
+    </div>
+  </div>
+
+  <!-- Comprobante de referencia (solo visible para notas) -->
+  <div class="card" id="card-ref" style="display:none">
+    <div class="card-title">Comprobante de referencia (opcional)</div>
+    <div class="autocomplete-wrap">
+      <input type="text" id="ref-input" placeholder="Buscar factura por número o cliente…" oninput="buscarCompRef(this.value)" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--bg);color:var(--text)">
+      <div class="autocomplete-list" id="ref-ac"></div>
+    </div>
+    <div id="ref-selected" style="display:none;margin-top:8px;padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:500;font-size:13px" id="ref-tag"></div>
+          <div style="font-size:12px;color:var(--faint)" id="ref-info"></div>
+        </div>
+        <button class="btn btn-xs" onclick="clearCompRef()">Quitar</button>
+      </div>
     </div>
   </div>
 
@@ -278,103 +300,6 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
   <div style="display:flex;gap:8px">
     <button class="btn" style="flex:1;justify-content:center" onclick="guardarCC()">Guardar en cuenta corriente</button>
     <button class="btn btn-primary" style="flex:1;justify-content:center" id="btn-emitir" onclick="emitirAhora()">Emitir boleta</button>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     PÁGINA: NOTAS (Crédito/Débito A/B)
-══════════════════════════════════════ -->
-<div class="page" id="page-notas">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-    <h1 style="font-family:'DM Serif Display',serif;font-size:26px">Notas</h1>
-  </div>
-
-  <!-- Tipo de nota -->
-  <div class="card">
-    <div class="card-title">Tipo de nota</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn active-type" id="n-nca" onclick="setTipoNota('NCA')">Nota de Crédito A</button>
-      <button class="btn" id="n-ncb" onclick="setTipoNota('NCB')">Nota de Crédito B</button>
-      <button class="btn" id="n-nda" onclick="setTipoNota('NDA')">Nota de Débito A</button>
-      <button class="btn" id="n-ndb" onclick="setTipoNota('NDB')">Nota de Débito B</button>
-    </div>
-    <div style="margin-top:10px;padding:10px;background:var(--green-l);border-radius:6px;font-size:12px;color:var(--green-d)">
-      <strong>Nota de Crédito:</strong> resta importe (devoluciones, anulaciones, descuentos). &nbsp;
-      <strong>Nota de Débito:</strong> suma importe (intereses, recargos, ajustes a favor).
-    </div>
-  </div>
-
-  <!-- Comprobante de referencia -->
-  <div class="card">
-    <div class="card-title">Comprobante de referencia (opcional)</div>
-    <div class="autocomplete-wrap">
-      <input type="text" id="nota-ref-input" placeholder="Buscar factura por número o cliente…" oninput="buscarCompRef(this.value)" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--bg);color:var(--text)">
-      <div class="autocomplete-list" id="nota-ref-ac"></div>
-    </div>
-    <div id="nota-ref-selected" style="display:none;margin-top:8px;padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:500;font-size:13px" id="nota-ref-tag"></div>
-          <div style="font-size:12px;color:var(--faint)" id="nota-ref-info"></div>
-        </div>
-        <button class="btn btn-xs" onclick="clearCompRef()">Quitar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cliente -->
-  <div class="card">
-    <div class="card-title">Cliente</div>
-    <div id="nota-cliente-search-wrap">
-      <div class="autocomplete-wrap">
-        <input type="text" id="nota-cliente-input" placeholder="Buscar por nombre…" oninput="buscarClienteNota(this.value)" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--bg);color:var(--text)">
-        <div class="autocomplete-list" id="nota-cliente-ac"></div>
-      </div>
-    </div>
-    <div id="nota-cliente-selected" style="display:none">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="avatar" id="nota-cliente-avatar" style="background:var(--green-l);color:var(--green-d)"></div>
-        <div style="flex:1">
-          <div style="font-weight:500;font-size:14px" id="nota-cliente-nombre-tag"></div>
-          <div style="font-size:12px;color:var(--faint)" id="nota-cliente-info-tag"></div>
-        </div>
-        <button class="btn btn-xs" onclick="clearClienteNota()">Cambiar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Items -->
-  <div class="card">
-    <div class="card-title">Ítems</div>
-    <table class="items-tbl">
-      <thead>
-        <tr>
-          <th>Producto / Concepto</th>
-          <th style="width:80px">Cantidad</th>
-          <th style="width:90px">Unidad</th>
-          <th class="r" style="width:120px">Precio unit.</th>
-          <th class="r" style="width:100px">Total</th>
-          <th style="width:32px"></th>
-        </tr>
-      </thead>
-      <tbody id="nota-items-tbody"></tbody>
-    </table>
-
-    <div class="autocomplete-wrap" style="margin-top:8px">
-      <input type="text" id="nota-item-input" placeholder="Agregar producto o concepto libre…" oninput="buscarItemNota(this.value)" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--bg);color:var(--text)">
-      <div class="autocomplete-list" id="nota-item-ac"></div>
-    </div>
-    <div style="margin-top:6px;font-size:11px;color:var(--faint)">Tip: si necesitás un concepto libre (ej: "Intereses por mora"), escribilo y presioná Enter.</div>
-
-    <div style="display:flex;justify-content:flex-end;gap:8px;align-items:baseline;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
-      <span style="font-size:13px;color:var(--muted)">Total</span>
-      <span style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace" id="nota-total">$0</span>
-    </div>
-  </div>
-
-  <div style="display:flex;gap:8px">
-    <button class="btn" style="flex:1;justify-content:center" onclick="cancelarNota()">Cancelar</button>
-    <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="emitirNota()">Emitir nota</button>
   </div>
 </div>
 
@@ -907,12 +832,11 @@ function goPage(id){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   const tabs=[...document.querySelectorAll('.nav-tab')];
-  const map={ventas:0,cc:1,notas:2,clientes:3,proveedores:4};
+  const map={ventas:0,cc:1,clientes:2,proveedores:3};
   if(map[id]!==undefined) tabs[map[id]].classList.add('active');
   if(id==='cc') renderCC('');
   if(id==='clientes') renderClientes('');
   if(id==='proveedores'){renderProveedores();renderProductos('');}
-  if(id==='notas'){renderItemsNota();}
 }
 
 // ══════════════ TOAST ══════════════
@@ -935,18 +859,37 @@ function abrirModal(id){document.getElementById(id).classList.add('open')}
 let tipoActual='FA';
 let clienteActual=null;
 let itemsActuales=[];
+let compRefActual=null; // comprobante de referencia para notas
+
+const TIPOS_LABEL={FA:'Factura A',FB:'Factura B',BO:'Boleta interna',NCA:'Nota de Crédito A',NCB:'Nota de Crédito B',NDA:'Nota de Débito A',NDB:'Nota de Débito B'};
+const TIPOS_BTN_LABEL={FA:'Emitir a AFIP (próx.)',FB:'Emitir a AFIP (próx.)',BO:'Emitir boleta',NCA:'Emitir Nota de Crédito A',NCB:'Emitir Nota de Crédito B',NDA:'Emitir Nota de Débito A',NDB:'Emitir Nota de Débito B'};
+const TIPOS_IDS=['t-fa','t-fb','t-bo','t-nca','t-ncb','t-nda','t-ndb'];
+const TIPO_ID_MAP={FA:'t-fa',FB:'t-fb',BO:'t-bo',NCA:'t-nca',NCB:'t-ncb',NDA:'t-nda',NDB:'t-ndb'};
+const TIPOS_NOTA=['NCA','NCB','NDA','NDB'];
 
 function setTipo(t){
   tipoActual=t;
-  ['t-fa','t-fb','t-bo'].forEach(id=>{
-    const el=document.getElementById(id);
-    el.className='btn';
-  });
-  const map={FA:'t-fa',FB:'t-fb',BO:'t-bo'};
-  document.getElementById(map[t]).className=t==='BO'?'btn active-type-purple':'btn active-type';
+  TIPOS_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.className='btn';});
+  const el=document.getElementById(TIPO_ID_MAP[t]);
+  if(el){
+    let cls='btn active-type';
+    if(t==='BO')cls='btn active-type-purple';
+    if(TIPOS_NOTA.includes(t))cls='btn active-type'; // notas también verde
+    el.className=cls;
+  }
   const btn=document.getElementById('btn-emitir');
-  btn.textContent=t==='BO'?'Emitir boleta':'Emitir a AFIP (próx.)';
+  btn.textContent=TIPOS_BTN_LABEL[t];
   btn.className=t==='BO'?'btn btn-purple':'btn btn-primary';
+  // Mostrar/ocultar el card de referencia
+  const cardRef=document.getElementById('card-ref');
+  if(cardRef){
+    if(TIPOS_NOTA.includes(t)){
+      cardRef.style.display='block';
+    }else{
+      cardRef.style.display='none';
+      clearCompRef();
+    }
+  }
 }
 
 function buscarCliente(val){
@@ -1069,9 +1012,10 @@ function guardarCC(){
     fecha:new Date().toLocaleDateString('es-AR'),
     items:itemsActuales.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty,unidad:it.unidad||'u'}))
   };
-  const comps=DB.comprobantes();comps.push(comp);DB.saveComprobantes(comps);
-  toast(`Guardado en cuenta corriente de ${clienteActual.nombre}`);
-  resetVenta();
+  DB.upsertOne('comprobantes',comp).then(()=>{
+    toast(`Guardado en cuenta corriente de ${clienteActual.nombre}`);
+    resetVenta();
+  }).catch(e=>{toast('Error al guardar','warn');console.error(e);});
 }
 
 function emitirAhora(){
@@ -1090,16 +1034,20 @@ function emitirAhora(){
     condicion:'contado',
     fecha:new Date().toLocaleDateString('es-AR'),
     items:items.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty,unidad:it.unidad||'u',precio:it.precio})),
-    total:items.reduce((s,it)=>s+it.precio*it.qty,0)
+    total:items.reduce((s,it)=>s+it.precio*it.qty,0),
+    refComprobanteId:compRefActual?compRefActual.id:null,
+    refComprobanteNumero:compRefActual?compRefActual.numero:null
   };
-  const comps=DB.comprobantes();comps.push(comp);DB.saveComprobantes(comps);
-  mostrarComprobante(comp);
-  resetVenta();
+  DB.upsertOne('comprobantes',comp).then(()=>{
+    toast(`✓ ${TIPOS_LABEL[tipoActual]} ${nro} emitida`);
+    mostrarComprobante(comp);
+    resetVenta();
+  }).catch(e=>{toast('Error al emitir','warn');console.error(e);});
 }
 
 function resetVenta(){
-  clienteActual=null;itemsActuales=[];
-  clearCliente();renderItems();
+  clienteActual=null;itemsActuales=[];compRefActual=null;
+  clearCliente();renderItems();clearCompRef();
   setTipo('FA');
 }
 
@@ -1110,65 +1058,17 @@ function nextNro(tipo){
   return `${prefix}-${String(comps.length+1).padStart(4,'0')}`;
 }
 
-// ══════════════ NOTAS (Crédito/Débito A/B) ══════════════
-let tipoNotaActual='NCA';
-let clienteNota=null;
-let itemsNota=[];
-let compRefActual=null;
-
-function setTipoNota(t){
-  tipoNotaActual=t;
-  document.querySelectorAll('#page-notas .card:first-child .btn').forEach(b=>b.classList.remove('active-type'));
-  const idMap={NCA:'n-nca',NCB:'n-ncb',NDA:'n-nda',NDB:'n-ndb'};
-  document.getElementById(idMap[t])?.classList.add('active-type');
-}
-
-function buscarClienteNota(val){
-  const ac=document.getElementById('nota-cliente-ac');
-  if(!val){ac.classList.remove('open');return;}
-  const cli=DB.clientes().filter(c=>c.nombre.toLowerCase().includes(val.toLowerCase()));
-  if(!cli.length){ac.classList.remove('open');return;}
-  ac.innerHTML=cli.slice(0,8).map(c=>{
-    const ini=c.nombre.split(/[\s,]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    return `<div class="ac-item" onclick="seleccionarClienteNota('${c.id}')">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="avatar" style="background:var(--green-l);color:var(--green-d);width:28px;height:28px;font-size:11px">${ini}</div>
-        <div><div style="font-weight:500;font-size:13px">${c.nombre}</div>
-        <div style="font-size:11px;color:var(--faint)">${c.cuit||'Sin CUIT'}</div></div>
-      </div></div>`;
-  }).join('');
-  ac.classList.add('open');
-}
-
-function seleccionarClienteNota(id){
-  clienteNota=DB.clientes().find(c=>c.id===id);
-  if(!clienteNota)return;
-  document.getElementById('nota-cliente-search-wrap').style.display='none';
-  document.getElementById('nota-cliente-selected').style.display='block';
-  const ini=clienteNota.nombre.split(/[\s,]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('nota-cliente-avatar').textContent=ini;
-  document.getElementById('nota-cliente-nombre-tag').textContent=clienteNota.nombre;
-  document.getElementById('nota-cliente-info-tag').textContent=(clienteNota.cuit||'Sin CUIT')+' · '+(clienteNota.iva||'Consumidor Final');
-  document.getElementById('nota-cliente-ac').classList.remove('open');
-}
-
-function clearClienteNota(){
-  clienteNota=null;
-  document.getElementById('nota-cliente-search-wrap').style.display='block';
-  document.getElementById('nota-cliente-selected').style.display='none';
-  document.getElementById('nota-cliente-input').value='';
-}
-
+// ══════════════ COMPROBANTE DE REFERENCIA (para notas) ══════════════
 function buscarCompRef(val){
-  const ac=document.getElementById('nota-ref-ac');
+  const ac=document.getElementById('ref-ac');
   if(!val||val.length<2){ac.classList.remove('open');return;}
   const v=val.toLowerCase();
   const comps=DB.comprobantes()
-    .filter(c=>c.estado==='emitido'&&(c.numero||'').toLowerCase().includes(v)||(c.clienteNombre||'').toLowerCase().includes(v))
+    .filter(c=>c.estado==='emitido'&&((c.numero||'').toLowerCase().includes(v)||(c.clienteNombre||'').toLowerCase().includes(v)))
     .slice(0,8);
   if(!comps.length){ac.classList.remove('open');return;}
   ac.innerHTML=comps.map(c=>{
-    const lbl=c.tipo==='FA'?'Factura A':c.tipo==='FB'?'Factura B':'Boleta';
+    const lbl=TIPOS_LABEL[c.tipo]||c.tipo;
     return `<div class="ac-item" onclick="seleccionarCompRef('${c.id}')">
       <div style="font-weight:500;font-size:13px">${c.numero} · ${lbl}</div>
       <div style="font-size:11px;color:var(--faint)">${c.clienteNombre} · ${c.fecha} · $${numFmt(c.total)}</div>
@@ -1180,133 +1080,26 @@ function buscarCompRef(val){
 function seleccionarCompRef(id){
   compRefActual=DB.comprobantes().find(c=>c.id===id);
   if(!compRefActual)return;
-  const lbl=compRefActual.tipo==='FA'?'Factura A':compRefActual.tipo==='FB'?'Factura B':'Boleta';
-  document.getElementById('nota-ref-tag').textContent=`${compRefActual.numero} · ${lbl}`;
-  document.getElementById('nota-ref-info').textContent=`${compRefActual.clienteNombre} · ${compRefActual.fecha} · $${numFmt(compRefActual.total)}`;
-  document.getElementById('nota-ref-selected').style.display='block';
-  document.getElementById('nota-ref-ac').classList.remove('open');
-  document.getElementById('nota-ref-input').value='';
+  const lbl=TIPOS_LABEL[compRefActual.tipo]||compRefActual.tipo;
+  document.getElementById('ref-tag').textContent=`${compRefActual.numero} · ${lbl}`;
+  document.getElementById('ref-info').textContent=`${compRefActual.clienteNombre} · ${compRefActual.fecha} · $${numFmt(compRefActual.total)}`;
+  document.getElementById('ref-selected').style.display='block';
+  document.getElementById('ref-ac').classList.remove('open');
+  document.getElementById('ref-input').value='';
   // Sugerir cliente del comprobante de referencia
-  if(!clienteNota&&compRefActual.clienteId){
-    seleccionarClienteNota(compRefActual.clienteId);
+  if(!clienteActual&&compRefActual.clienteId){
+    seleccionarCliente(compRefActual.clienteId);
   }
 }
 
 function clearCompRef(){
   compRefActual=null;
-  document.getElementById('nota-ref-selected').style.display='none';
+  const sel=document.getElementById('ref-selected');
+  if(sel)sel.style.display='none';
+  const inp=document.getElementById('ref-input');
+  if(inp)inp.value='';
 }
 
-function buscarItemNota(val){
-  const ac=document.getElementById('nota-item-ac');
-  const input=document.getElementById('nota-item-input');
-  if(!val){ac.classList.remove('open');return;}
-  const prods=DB.productos().filter(p=>
-    (p.nombre.toLowerCase().includes(val.toLowerCase())||(p.codigo||'').toLowerCase().includes(val.toLowerCase()))
-    &&p.precio>0
-  );
-  if(!prods.length){ac.classList.remove('open');return;}
-  ac.innerHTML=prods.slice(0,12).map(p=>`<div class="ac-item" onclick="agregarItemNota('${p.id}')">
-    <div><span class="pfx">${p.prefijo}</span><span class="ac-name">${p.nombre}</span>
-    <br><span class="ac-meta">${p.codigo||''} · ${p.proveedorNombre}</span></div>
-    <span class="ac-price">$${numFmt(p.precio)}</span>
-  </div>`).join('');
-  ac.classList.add('open');
-  // Enter sin selección: agrega concepto libre
-  input.onkeydown=(e)=>{
-    if(e.key==='Enter'&&input.value.trim()){
-      e.preventDefault();
-      agregarItemNotaLibre(input.value.trim());
-    }
-  };
-}
-
-function agregarItemNota(prodId){
-  const p=DB.productos().find(x=>x.id===prodId);
-  if(!p)return;
-  itemsNota.push({prodId,nombre:p.nombre,prefijo:p.prefijo,precio:p.precio,qty:1,unidad:'u'});
-  renderItemsNota();
-  document.getElementById('nota-item-input').value='';
-  document.getElementById('nota-item-ac').classList.remove('open');
-}
-
-function agregarItemNotaLibre(texto){
-  itemsNota.push({prodId:null,nombre:texto,prefijo:'·',precio:0,qty:1,unidad:'u'});
-  renderItemsNota();
-  document.getElementById('nota-item-input').value='';
-  document.getElementById('nota-item-ac').classList.remove('open');
-}
-
-function renderItemsNota(){
-  const tbody=document.getElementById('nota-items-tbody');
-  if(!itemsNota.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--faint);padding:16px">Sin ítems todavía</td></tr>';actualizarTotalNota();return;}
-  tbody.innerHTML=itemsNota.map((it,i)=>`<tr>
-    <td><span class="pfx">${it.prefijo}</span>${it.nombre}</td>
-    <td><input type="number" step="0.01" min="0" value="${it.qty}" onchange="setQtyNota(${i},this.value)" style="width:70px;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);text-align:right"></td>
-    <td><select onchange="setUnidadNota(${i},this.value)" style="width:80px;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text)">
-      <option value="u" ${(it.unidad||'u')==='u'?'selected':''}>u</option>
-      <option value="mts" ${it.unidad==='mts'?'selected':''}>mts</option>
-      <option value="m2" ${it.unidad==='m2'?'selected':''}>m²</option>
-      <option value="kg" ${it.unidad==='kg'?'selected':''}>kg</option>
-      <option value="lts" ${it.unidad==='lts'?'selected':''}>lts</option>
-      <option value="doc" ${it.unidad==='doc'?'selected':''}>doc</option>
-      <option value="caja" ${it.unidad==='caja'?'selected':''}>caja</option>
-    </select></td>
-    <td class="r"><input type="number" step="0.01" min="0" value="${it.precio}" onchange="setPrecioNota(${i},this.value)" style="width:100px;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);text-align:right"></td>
-    <td class="r" style="font-family:'DM Mono',monospace;font-weight:500">$${numFmt(it.precio*it.qty)}</td>
-    <td><button class="btn btn-xs" style="color:var(--red);border-color:var(--red);background:var(--red-l)" onclick="quitarItemNota(${i})">✕</button></td>
-  </tr>`).join('');
-  actualizarTotalNota();
-}
-
-function setQtyNota(i,v){const n=parseFloat(v)||0;itemsNota[i].qty=n>0?n:1;renderItemsNota();}
-function setUnidadNota(i,u){itemsNota[i].unidad=u;}
-function setPrecioNota(i,v){itemsNota[i].precio=parseFloat(v)||0;renderItemsNota();}
-function quitarItemNota(i){itemsNota.splice(i,1);renderItemsNota();}
-function actualizarTotalNota(){
-  const t=itemsNota.reduce((s,it)=>s+it.precio*it.qty,0);
-  document.getElementById('nota-total').textContent='$'+numFmt(t);
-}
-
-function cancelarNota(){
-  if(!itemsNota.length&&!clienteNota){return;}
-  if(!confirm('¿Cancelar esta nota? Se van a perder los datos cargados.'))return;
-  resetNota();
-}
-
-function resetNota(){
-  clienteNota=null;itemsNota=[];compRefActual=null;
-  clearClienteNota();clearCompRef();renderItemsNota();
-  setTipoNota('NCA');
-}
-
-function emitirNota(){
-  if(!clienteNota){toast('Seleccioná un cliente primero','warn');return;}
-  if(!itemsNota.length){toast('Agregá al menos un ítem','warn');return;}
-  const nro=nextNro(tipoNotaActual);
-  const total=itemsNota.reduce((s,it)=>s+it.precio*it.qty,0);
-  const comp={
-    id:uid(),clienteId:clienteNota.id,clienteNombre:clienteNota.nombre,
-    clienteCuit:clienteNota.cuit||'',clienteDomicilio:clienteNota.domicilio||'',
-    clienteIva:clienteNota.iva||'Consumidor Final',
-    tipo:tipoNotaActual,estado:'emitido',numero:nro,
-    condicion:'contado',
-    fecha:new Date().toLocaleDateString('es-AR'),
-    items:itemsNota.map(it=>({prodId:it.prodId,nombre:it.nombre,prefijo:it.prefijo,qty:it.qty,unidad:it.unidad||'u',precio:it.precio})),
-    total:total,
-    refComprobanteId:compRefActual?compRefActual.id:null,
-    refComprobanteNumero:compRefActual?compRefActual.numero:null
-  };
-  DB.upsertOne('comprobantes',comp).then(()=>{
-    toast(`✓ ${getTipoNotaLabel(tipoNotaActual)} ${nro} emitida`);
-    mostrarComprobante(comp);
-    resetNota();
-  }).catch(e=>{toast('Error al emitir','warn');console.error(e);});
-}
-
-function getTipoNotaLabel(t){
-  return {NCA:'Nota de Crédito A',NCB:'Nota de Crédito B',NDA:'Nota de Débito A',NDB:'Nota de Débito B'}[t]||t;
-}
 
 // ══════════════ CUENTA CORRIENTE ══════════════
 let ccClienteActual=null;
@@ -1619,20 +1412,48 @@ function renderProductos(filtro){
   </tr>`).join('');
 }
 
+// Parsea un precio escrito con coma o punto como separador decimal
+// Acepta: "15", "15.50", "15,50", "1.234,56", "1,234.56"
+function parsePrecioFlexible(str){
+  if(typeof str==='number')return str;
+  if(!str)return NaN;
+  let s=String(str).trim().replace(/\s/g,'').replace(/\$/g,'');
+  if(!s)return NaN;
+  // Si tiene coma Y punto, el último es el decimal (manejar miles)
+  const lastDot=s.lastIndexOf('.');
+  const lastComma=s.lastIndexOf(',');
+  if(lastDot>-1&&lastComma>-1){
+    if(lastComma>lastDot){
+      // formato europeo: 1.234,56 → 1234.56
+      s=s.replace(/\./g,'').replace(',','.');
+    }else{
+      // formato anglo: 1,234.56 → 1234.56
+      s=s.replace(/,/g,'');
+    }
+  }else if(lastComma>-1){
+    // solo coma: 15,50 → 15.50
+    s=s.replace(',','.');
+  }
+  // si solo tiene punto, ya está bien
+  return parseFloat(s);
+}
+
 function editarPrecio(ev,id){
   ev.stopPropagation();
   const span=ev.currentTarget;
   const p=DB.productos().find(x=>x.id===id);
   if(!p) return;
   const precioActual=p.precio;
-  // Reemplazar el span por un input
+  // Reemplazar el span por un input de texto (acepta coma y punto)
   const input=document.createElement('input');
-  input.type='number';input.step='0.01';input.min='0';input.value=precioActual;
-  input.style.cssText="width:90px;padding:3px 7px;border:1px solid var(--green);border-radius:5px;font-family:'DM Mono',monospace;font-weight:500;text-align:right;font-size:13px;background:var(--bg);color:var(--text)";
+  input.type='text';
+  input.inputMode='decimal'; // teclado numérico en mobile
+  input.value=numFmt(precioActual); // mostrar formato es-AR (con coma)
+  input.style.cssText="width:100px;padding:3px 7px;border:1px solid var(--green);border-radius:5px;font-family:'DM Mono',monospace;font-weight:500;text-align:right;font-size:13px;background:var(--bg);color:var(--text)";
   span.replaceWith(input);
   input.focus();input.select();
   const guardar=()=>{
-    const nuevo=parseFloat(input.value);
+    const nuevo=parsePrecioFlexible(input.value);
     if(isNaN(nuevo)||nuevo<0){toast('Precio inválido','warn');renderProductos(document.getElementById('prod-search')?.value||'');return;}
     if(nuevo===precioActual){renderProductos(document.getElementById('prod-search')?.value||'');return;}
     const actualizado={...p,precio:nuevo};
