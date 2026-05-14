@@ -145,6 +145,55 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
 .tab-content{display:none}
 .tab-content.active{display:block}
 
+/* DEUDA BOX en modal CC */
+.cc-deuda-box{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 16px;border-radius:var(--r);
+  background:linear-gradient(135deg, var(--red-l) 0%, #fff 100%);
+  border:1px solid var(--red);
+}
+.cc-deuda-box.al-dia{background:linear-gradient(135deg, var(--green-l) 0%, #fff 100%);border-color:var(--green)}
+.cc-deuda-box.a-favor{background:linear-gradient(135deg, #f0f9ff 0%, #fff 100%);border-color:#bae6fd}
+.cc-deuda-box .lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--red)}
+.cc-deuda-box.al-dia .lbl{color:var(--green-d)}
+.cc-deuda-box.a-favor .lbl{color:#0369a1}
+.cc-deuda-box .monto{font-family:'DM Mono',monospace;font-size:24px;font-weight:600;color:var(--red);letter-spacing:-.5px;margin-top:1px}
+.cc-deuda-box.al-dia .monto{color:var(--green-d)}
+.cc-deuda-box.a-favor .monto{color:#0369a1}
+.cc-deuda-box .sub{font-size:11px;color:var(--faint);margin-top:3px}
+.cc-deuda-box .btn-pagar{
+  background:var(--green);color:#fff;border:none;
+  padding:10px 16px;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:500;
+  cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;transition:all .15s;
+}
+.cc-deuda-box .btn-pagar:hover{background:var(--green-d)}
+.cc-deuda-box .btn-pagar:disabled{opacity:.5;cursor:not-allowed}
+
+/* Estado de pago en filas del historial */
+.pago-estado{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:8px}
+.pago-estado.impago{background:var(--red-l);color:var(--red)}
+.pago-estado.parcial{background:var(--amber-l);color:var(--amber-d)}
+.pago-estado.pagado{background:var(--green-l);color:var(--green-d)}
+
+/* Modal pago — tabs */
+.pago-modtab.active{background:#fff!important;color:var(--text)!important;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.pago-modtab.active span{color:var(--muted)!important}
+
+/* Modal pago — lista de comprobantes con radio */
+.pago-comp-item{
+  padding:10px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:11px;cursor:pointer;transition:background .1s;
+}
+.pago-comp-item:last-child{border-bottom:none}
+.pago-comp-item:hover{background:var(--bg)}
+.pago-comp-item.selected{background:var(--green-l)}
+.pago-radio-dot{
+  width:16px;height:16px;border:2px solid var(--border2);border-radius:50%;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s;
+}
+.pago-comp-item.selected .pago-radio-dot{border-color:var(--green)}
+.pago-comp-item.selected .pago-radio-dot::after{content:'';width:7px;height:7px;background:var(--green);border-radius:50%}
+
 /* STEP WIZARD */
 .steps{display:flex;align-items:center;gap:4px;margin-bottom:18px}
 .step-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
@@ -159,6 +208,49 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
 .upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:24px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg)}
 .upload-zone:hover{border-color:var(--green);background:var(--green-l)}
 .upload-zone.loaded{border-color:var(--green);background:var(--green-l)}
+
+/* WIZARD PASO 3: SELECTOR VISUAL DE COLUMNAS */
+.pv-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:99px;border:2px solid var(--border2);
+  background:#fff;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;
+}
+.pv-chip:hover:not(.active):not(.assigned){border-color:#999}
+.pv-chip.active{border-color:var(--green);background:var(--green-l);color:var(--green-d);box-shadow:0 0 0 3px rgba(29,158,117,.15)}
+.pv-chip.assigned{border-color:var(--green);background:var(--green);color:#fff}
+.pv-chip.assigned .pv-chip-tag{background:rgba(255,255,255,.25);color:#fff}
+.pv-chip-tag{background:var(--bg);color:var(--muted);padding:1px 7px;border-radius:99px;font-size:10px;font-weight:600}
+.pv-chip .req{color:var(--red);margin-left:1px}
+.pv-chip.assigned .req{color:rgba(255,255,255,.7)}
+.pv-chip-x{margin-left:1px;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;font-weight:700}
+.pv-chip-x:hover{background:rgba(255,255,255,.4)}
+
+#pv-fila-toggle.active{background:var(--amber-l);border-color:#EF9F27;color:var(--amber-d)}
+
+/* Grilla Excel */
+.pv-excel-table{width:100%;border-collapse:collapse}
+.pv-excel-table th{
+  background:#fafaf9;font-weight:600;color:var(--muted);text-align:center;
+  border-bottom:1px solid var(--border);border-right:1px solid var(--border);min-width:100px;padding:0;
+  position:sticky;top:0;z-index:2;
+}
+.pv-excel-table th:first-child{background:#f0efed;width:36px;min-width:36px;color:var(--faint)}
+.pv-excel-table th .pv-col-letra{display:block;padding:6px 8px 3px;font-size:12px;font-weight:700;color:var(--text)}
+.pv-excel-table th .pv-col-h{display:block;padding:0 8px 6px;font-size:10px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv-excel-table th .pv-col-tag{display:block;padding:2px 8px;font-size:9px;font-weight:700;background:var(--green);color:#fff;letter-spacing:.3px;text-transform:uppercase}
+.pv-excel-table.selecting-col th.pv-col-cell{cursor:pointer;background:#fff7ed}
+.pv-excel-table.selecting-col th.pv-col-cell:hover{background:#fbbf24}
+.pv-excel-table.selecting-col th.pv-col-cell:hover .pv-col-letra,
+.pv-excel-table.selecting-col th.pv-col-cell:hover .pv-col-h{color:#fff}
+.pv-excel-table td{padding:5px 8px;border-bottom:1px solid #f3f4f6;border-right:1px solid #f3f4f6;background:#fff}
+.pv-excel-table .pv-row-num{background:#f0efed;color:var(--faint);text-align:center;font-weight:600;width:36px;border-right:1px solid var(--border)}
+.pv-excel-table.selecting-row tr{cursor:pointer}
+.pv-excel-table.selecting-row tbody tr:hover .pv-row-num{background:#fbbf24;color:#fff}
+.pv-excel-table.selecting-row tbody tr:hover td{background:#fffbeb}
+.pv-excel-table tr.pv-is-header td:not(.pv-row-num){background:#fafaf9;color:var(--faint);font-style:italic}
+.pv-excel-table tr.pv-is-start .pv-row-num{background:var(--amber);color:#fff}
+.pv-excel-table tr.pv-is-start .pv-row-num::after{content:' →';font-weight:900}
+.pv-col-asignada{background:#f0fdf4 !important}
 .uz-text{font-size:13px;color:var(--muted);margin-bottom:4px}
 .uz-sub{font-size:11px;color:var(--faint)}
 
@@ -481,31 +573,32 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
 
     <!-- Step 3 -->
     <div id="prov-step3" style="display:none">
-      <div class="hint" style="margin-bottom:12px">Indicá qué columna del Excel corresponde a cada campo. Solo hay que hacerlo una vez.</div>
-      <div class="field-row">
-        <div class="field">
-          <label>Columna de código</label>
-          <select id="pv-col-cod"></select>
-        </div>
-        <div class="field">
-          <label>Columna de descripción *</label>
-          <select id="pv-col-desc"></select>
-        </div>
+      <div class="hint" style="margin-bottom:12px">Hacé click en una etiqueta y después en la columna del Excel a la que corresponde. Esto se configura una sola vez por proveedor.</div>
+
+      <!-- Selects ocultos: se sincronizan al asignar columnas; usados por buildPreview() y confirmarImportacion() -->
+      <select id="pv-col-cod" style="display:none"></select>
+      <select id="pv-col-desc" style="display:none"></select>
+      <select id="pv-col-precio" style="display:none"></select>
+      <input type="hidden" id="pv-fila-inicio" value="2">
+
+      <!-- Chips de campos -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div id="pv-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        <button class="btn btn-sm" id="pv-fila-toggle" onclick="pvToggleFila()" style="margin-left:auto;font-size:11px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/></svg>
+          Fila inicio: <span id="pv-fila-label">2</span>
+        </button>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Columna de precio *</label>
-          <select id="pv-col-precio"></select>
-        </div>
-        <div class="field">
-          <label>Fila donde empiezan los datos</label>
-          <input type="number" id="pv-fila-inicio" value="2" min="1" max="20">
-          <div class="hint">Normalmente fila 2 (la 1 es el encabezado)</div>
-        </div>
-      </div>
+
+      <!-- Mensaje de hint contextual -->
+      <div id="pv-hint" class="notice notice-info" style="font-size:11px;padding:8px 12px;margin-bottom:10px"></div>
+
+      <!-- Grilla del Excel -->
+      <div id="pv-excel-wrap" style="border:1px solid var(--border);border-radius:var(--r);max-height:300px;overflow:auto;background:#fff;font-family:'DM Mono',monospace;font-size:11px"></div>
+
       <div class="modal-footer">
         <button class="btn" onclick="pvBack(2)">‹ Atrás</button>
-        <button class="btn btn-primary" onclick="pvNext(4)">Ver vista previa</button>
+        <button class="btn btn-primary" id="pv-btn3" onclick="pvNext(4)">Ver vista previa</button>
       </div>
     </div>
 
@@ -535,6 +628,10 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
         <div style="font-size:12px;color:var(--faint)" id="cc-meta"></div>
       </div>
     </div>
+
+    <!-- Bloque resumen de deuda -->
+    <div id="cc-deuda-box" class="cc-deuda-box" style="margin-bottom:14px"></div>
+
     <div class="tabs">
       <button class="tab active" onclick="ccTab('pendientes',this)">Pendientes de emitir</button>
       <button class="tab" onclick="ccTab('historial',this)">Historial emitidos</button>
@@ -544,6 +641,90 @@ nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(247,245,240,.9
     <div class="modal-footer no-print">
       <button class="btn" onclick="cerrarModal('modal-cc')">Cerrar</button>
       <button class="btn btn-primary" id="cc-emitir-todos" onclick="emitirTodos()">Emitir todos ahora</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Registrar pago -->
+<div class="overlay" id="modal-pago">
+  <div class="modal" style="max-width:560px">
+    <h2 style="display:flex;align-items:center;gap:8px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green-d)" stroke-width="2.2"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Registrar pago
+    </h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--bg);padding:4px;border-radius:var(--r);margin-bottom:16px">
+      <button class="pago-modtab active" id="pago-tab-comp" onclick="pagoModalidad('comp')" style="border:none;background:transparent;padding:9px 12px;border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);text-align:left;display:flex;flex-direction:column;gap:2px;line-height:1.3">
+        Pagar un comprobante
+        <span style="font-weight:400;font-size:10px;color:var(--faint)">Aplicar a una factura/boleta específica</span>
+      </button>
+      <button class="pago-modtab" id="pago-tab-cta" onclick="pagoModalidad('cuenta')" style="border:none;background:transparent;padding:9px 12px;border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);text-align:left;display:flex;flex-direction:column;gap:2px;line-height:1.3">
+        Pago a cuenta
+        <span style="font-weight:400;font-size:10px;color:var(--faint)">Se aplica a deuda general (FIFO)</span>
+      </button>
+    </div>
+
+    <div id="pago-modo-comp">
+      <div class="card-title">Elegí el comprobante</div>
+      <div id="pago-comp-list" style="border:1px solid var(--border);border-radius:var(--r);max-height:200px;overflow-y:auto;margin-bottom:10px"></div>
+      <div id="pago-monto-comp-wrap" style="display:none">
+        <div class="card-title">Monto a pagar</div>
+        <div style="position:relative">
+          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;font-weight:600;color:var(--faint)">$</span>
+          <input type="text" id="pago-monto-comp" oninput="pagoOnMontoComp()" style="width:100%;padding:11px 12px 11px 28px;border:1px solid var(--border2);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:18px;font-weight:600;background:var(--bg)">
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:5px">
+          <span id="pago-monto-help" style="color:var(--faint)">—</span>
+          <a onclick="pagoTotalComp()" style="color:var(--green-d);cursor:pointer;font-weight:600">Pagar total pendiente</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="pago-modo-cuenta" style="display:none">
+      <div class="card-title">Monto a pagar a cuenta</div>
+      <div style="position:relative">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;font-weight:600;color:var(--faint)">$</span>
+        <input type="text" id="pago-monto-cuenta" oninput="pagoOnMontoCuenta()" style="width:100%;padding:11px 12px 11px 28px;border:1px solid var(--border2);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:18px;font-weight:600;background:var(--bg)">
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:5px">
+        <span id="pago-cuenta-help" style="color:var(--faint)">—</span>
+        <a onclick="pagoTotalCuenta()" style="color:var(--green-d);cursor:pointer;font-weight:600">Pagar deuda completa</a>
+      </div>
+      <div class="notice notice-info" style="margin-top:10px;font-size:11px">
+        Se aplicará primero a los comprobantes más viejos. Si pagás más de la deuda total, queda como saldo a favor.
+      </div>
+      <div id="pago-exceso" style="display:none;margin-top:8px;padding:9px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--r);font-size:11px;color:#0369a1">
+        Saldo a favor del cliente: <strong id="pago-exceso-monto" style="font-family:'DM Mono',monospace">$ 0,00</strong>
+      </div>
+    </div>
+
+    <div class="field-row" style="margin-top:14px">
+      <div class="field">
+        <label>Forma de pago</label>
+        <select id="pago-forma">
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="tarjeta_debito">Tarjeta de débito</option>
+          <option value="tarjeta_credito">Tarjeta de crédito</option>
+          <option value="cheque">Cheque</option>
+          <option value="mercadopago">MercadoPago</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="pago-fecha">
+      </div>
+    </div>
+    <div class="field">
+      <label>Observaciones (opcional)</label>
+      <textarea id="pago-obs" rows="2" placeholder="Nº de cheque, número de operación, etc." style="resize:vertical"></textarea>
+    </div>
+
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
+      <div style="font-size:12px;color:var(--muted)">Pago: <strong id="pago-resumen" style="font-family:'DM Mono',monospace;color:var(--text)">$ 0,00</strong></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="cerrarModal('modal-pago')">Cancelar</button>
+        <button class="btn btn-primary" id="pago-btn-confirmar" onclick="confirmarPago()" disabled style="opacity:.5">Confirmar pago</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1141,6 +1322,7 @@ function abrirCC(clienteId){
   document.getElementById('cc-avatar').style.color='var(--green-d)';
   document.getElementById('cc-nombre').textContent=c.nombre;
   document.getElementById('cc-meta').textContent=c.cuit||'Sin CUIT';
+  renderCCDeudaBox();
   renderCCPendientes();
   renderCCHistorial();
   const pend=DB.comprobantes().filter(x=>x.clienteId===clienteId&&x.estado==='pendiente');
@@ -1201,11 +1383,18 @@ function renderCCHistorial(){
   const comps=DB.comprobantes().filter(x=>x.clienteId===ccClienteActual.id&&x.estado==='emitido').reverse();
   const div=document.getElementById('cc-tab-historial');
   if(!comps.length){div.innerHTML='<div class="empty"><div class="empty-icon">📄</div><div class="empty-text">Sin comprobantes emitidos todavía</div></div>';return;}
-  div.innerHTML=comps.map(c=>`<div class="card" style="margin-bottom:8px;padding:12px 14px">
+  div.innerHTML=comps.map(c=>{
+    const pagado=getPagado(c.id);
+    const saldo=Math.max(0, c.total - pagado);
+    let estadoTag='';
+    if(saldo===0 && c.total>0) estadoTag='<span class="pago-estado pagado">Pagado</span>';
+    else if(pagado>0) estadoTag=`<span class="pago-estado parcial">Parcial · $${numFmt(pagado)}</span>`;
+    else estadoTag='<span class="pago-estado impago">Impago</span>';
+    return `<div class="card" style="margin-bottom:8px;padding:12px 14px">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-weight:500;font-size:13px">${c.numero} · ${c.tipo==='FA'?'Factura A':c.tipo==='FB'?'Factura B':'Boleta'}</div>
-        <div style="font-size:12px;color:var(--faint)">Emitido el ${c.fecha} · ${c.items.length} ítem${c.items.length>1?'s':''}</div>
+        <div style="font-weight:500;font-size:13px">${c.numero} · ${c.tipo==='FA'?'Factura A':c.tipo==='FB'?'Factura B':'Boleta'} ${estadoTag}</div>
+        <div style="font-size:12px;color:var(--faint)">Emitido el ${c.fecha} · ${c.items.length} ítem${c.items.length>1?'s':''}${saldo>0?` · <span style="color:var(--red)">Debe $${numFmt(saldo)}</span>`:''}</div>
       </div>
       <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div style="font-weight:600;font-family:'DM Mono',monospace">$${numFmt(c.total)}</div>
@@ -1215,7 +1404,7 @@ function renderCCHistorial(){
         </div>
       </div>
     </div>
-  </div>`).join('');
+  </div>`}).join('');
 }
 
 function eliminarComprobante(id){
@@ -1625,6 +1814,510 @@ function numFmt(n){return Math.round(n).toLocaleString('es-AR')}
   document.getElementById('nav-date').textContent=new Date().toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
   toast('✓ Conectado a la nube');
 })();
+
+// ═══════════════════════════════════════════════════
+// PAGOS — registro y aplicación FIFO
+// ═══════════════════════════════════════════════════
+// Por ahora pagos se guardan en localStorage como fallback hasta que
+// se agreguen las columnas `pagado` (comprobantes) y `saldo_a_favor` (clientes) en Supabase.
+// Cuando estén las columnas, reemplazar getPagado/setPagado/getSaldoFavor/setSaldoFavor
+// por lecturas directas del objeto comprobante/cliente.
+
+function getPagado(compId){
+  const m=JSON.parse(localStorage.getItem('dp_pagos')||'{}');
+  return Number(m[compId]||0);
+}
+function setPagado(compId, monto){
+  const m=JSON.parse(localStorage.getItem('dp_pagos')||'{}');
+  m[compId]=Number(monto)||0;
+  localStorage.setItem('dp_pagos',JSON.stringify(m));
+}
+function getSaldoFavor(clienteId){
+  const m=JSON.parse(localStorage.getItem('dp_saldo_favor')||'{}');
+  return Number(m[clienteId]||0);
+}
+function setSaldoFavor(clienteId, monto){
+  const m=JSON.parse(localStorage.getItem('dp_saldo_favor')||'{}');
+  m[clienteId]=Math.max(0, Number(monto)||0);
+  localStorage.setItem('dp_saldo_favor',JSON.stringify(m));
+}
+function getHistorialPagos(clienteId){
+  const arr=JSON.parse(localStorage.getItem('dp_historial_pagos')||'[]');
+  return arr.filter(p=>p.clienteId===clienteId);
+}
+function addHistorialPago(pago){
+  const arr=JSON.parse(localStorage.getItem('dp_historial_pagos')||'[]');
+  arr.push(pago);
+  localStorage.setItem('dp_historial_pagos',JSON.stringify(arr));
+}
+
+// Resumen de deuda para un cliente
+function calcDeudaCliente(clienteId){
+  const emitidos=DB.comprobantes().filter(c=>c.clienteId===clienteId && c.estado==='emitido');
+  let deuda=0, impagos=0;
+  emitidos.forEach(c=>{
+    const saldo=Math.max(0, c.total - getPagado(c.id));
+    if(saldo>0){ deuda+=saldo; impagos++; }
+  });
+  return { deuda, impagos, totalComps: emitidos.length };
+}
+
+// Render del bloque de deuda en el modal CC
+function renderCCDeudaBox(){
+  if(!ccClienteActual) return;
+  const box=document.getElementById('cc-deuda-box');
+  if(!box) return;
+  const {deuda, impagos} = calcDeudaCliente(ccClienteActual.id);
+  const saldoFavor=getSaldoFavor(ccClienteActual.id);
+  const historial=getHistorialPagos(ccClienteActual.id);
+  const ultimoPago = historial.length ? historial[historial.length-1].fecha : null;
+  box.classList.remove('al-dia','a-favor');
+  let lbl, monto, sub, btnDisabled='';
+  if(deuda > 0){
+    lbl='Deuda total';
+    monto='$ '+numFmt(deuda);
+    sub=`${impagos} comprobante${impagos>1?'s':''} impago${impagos>1?'s':''}${ultimoPago?` · Último pago: ${ultimoPago}`:''}`;
+  } else if(saldoFavor > 0){
+    box.classList.add('a-favor');
+    lbl='Saldo a favor';
+    monto='$ '+numFmt(saldoFavor);
+    sub=`Sin comprobantes impagos${ultimoPago?` · Último pago: ${ultimoPago}`:''}`;
+    btnDisabled='disabled';
+  } else {
+    box.classList.add('al-dia');
+    lbl='Cuenta al día';
+    monto='$ 0,00';
+    sub=`Sin comprobantes impagos${ultimoPago?` · Último pago: ${ultimoPago}`:''}`;
+    btnDisabled='disabled';
+  }
+  box.innerHTML=`
+    <div>
+      <div class="lbl">${lbl}</div>
+      <div class="monto">${monto}</div>
+      <div class="sub">${sub}</div>
+    </div>
+    <button class="btn-pagar" onclick="abrirModalPago()" ${btnDisabled}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Registrar pago
+    </button>`;
+}
+
+// ─── Modal pago ───
+let pagoState = { modalidad:'comp', compSelId:null, montoComp:0, montoCuenta:0 };
+
+function abrirModalPago(){
+  pagoState = { modalidad:'comp', compSelId:null, montoComp:0, montoCuenta:0 };
+  document.getElementById('pago-tab-comp').classList.add('active');
+  document.getElementById('pago-tab-cta').classList.remove('active');
+  document.getElementById('pago-modo-comp').style.display='';
+  document.getElementById('pago-modo-cuenta').style.display='none';
+  document.getElementById('pago-monto-comp-wrap').style.display='none';
+  document.getElementById('pago-monto-comp').value='';
+  document.getElementById('pago-monto-cuenta').value='';
+  document.getElementById('pago-obs').value='';
+  document.getElementById('pago-forma').value='efectivo';
+  const hoy=new Date().toISOString().slice(0,10);
+  document.getElementById('pago-fecha').value=hoy;
+  document.getElementById('pago-exceso').style.display='none';
+  renderPagoCompList();
+  actualizarResumenPago();
+  abrirModal('modal-pago');
+}
+
+function pagoModalidad(m){
+  pagoState.modalidad=m;
+  document.getElementById('pago-tab-comp').classList.toggle('active', m==='comp');
+  document.getElementById('pago-tab-cta').classList.toggle('active', m==='cuenta');
+  document.getElementById('pago-modo-comp').style.display=m==='comp'?'':'none';
+  document.getElementById('pago-modo-cuenta').style.display=m==='cuenta'?'':'none';
+  if(m==='cuenta'){
+    const {deuda}=calcDeudaCliente(ccClienteActual.id);
+    document.getElementById('pago-cuenta-help').textContent=`Deuda total: $ ${numFmt(deuda)}`;
+  }
+  pagoState.compSelId=null;
+  pagoState.montoComp=0;
+  pagoState.montoCuenta=0;
+  document.getElementById('pago-monto-comp').value='';
+  document.getElementById('pago-monto-cuenta').value='';
+  document.getElementById('pago-monto-comp-wrap').style.display='none';
+  document.getElementById('pago-exceso').style.display='none';
+  renderPagoCompList();
+  actualizarResumenPago();
+}
+
+function renderPagoCompList(){
+  const emitidos=DB.comprobantes().filter(c=>c.clienteId===ccClienteActual.id && c.estado==='emitido');
+  const impagos=emitidos.filter(c => (c.total - getPagado(c.id)) > 0);
+  const div=document.getElementById('pago-comp-list');
+  if(!impagos.length){
+    div.innerHTML='<div style="padding:18px;text-align:center;color:var(--faint);font-size:12px">No hay comprobantes impagos</div>';
+    return;
+  }
+  div.innerHTML=impagos.map(co=>{
+    const pagado=getPagado(co.id);
+    const saldo=co.total - pagado;
+    const sel=pagoState.compSelId===co.id;
+    const tipoLabel=co.tipo==='FA'?'Factura A':co.tipo==='FB'?'Factura B':'Boleta';
+    return `<div class="pago-comp-item ${sel?'selected':''}" onclick="pagoSelComp('${co.id}')">
+      <div class="pago-radio-dot"></div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:12px">${co.numero} · ${tipoLabel}</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:1px">Emitido el ${co.fecha}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:600;font-family:'DM Mono',monospace;font-size:13px">$${numFmt(co.total)}</div>
+        <div style="color:var(--red);font-size:11px;font-weight:600;font-family:'DM Mono',monospace;margin-top:1px">Debe $${numFmt(saldo)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function pagoSelComp(id){
+  pagoState.compSelId=id;
+  const co=DB.comprobantes().find(c=>c.id===id);
+  const saldo=co.total - getPagado(co.id);
+  pagoState.montoComp=saldo;
+  document.getElementById('pago-monto-comp').value=numFmt(saldo);
+  document.getElementById('pago-monto-comp-wrap').style.display='';
+  document.getElementById('pago-monto-help').textContent=`Saldo pendiente: $${numFmt(saldo)}`;
+  renderPagoCompList();
+  actualizarResumenPago();
+}
+
+function pagoOnMontoComp(){
+  const v=document.getElementById('pago-monto-comp').value;
+  pagoState.montoComp=parseMonto(v);
+  if(pagoState.compSelId){
+    const co=DB.comprobantes().find(c=>c.id===pagoState.compSelId);
+    const saldo=co.total - getPagado(co.id);
+    const help=document.getElementById('pago-monto-help');
+    if(pagoState.montoComp > saldo){
+      help.innerHTML=`<span style="color:var(--red)">⚠ Excede el saldo pendiente ($${numFmt(saldo)})</span>`;
+    } else {
+      help.textContent=`Saldo pendiente: $${numFmt(saldo)}`;
+    }
+  }
+  actualizarResumenPago();
+}
+
+function pagoTotalComp(){
+  if(!pagoState.compSelId) return;
+  const co=DB.comprobantes().find(c=>c.id===pagoState.compSelId);
+  const saldo=co.total - getPagado(co.id);
+  pagoState.montoComp=saldo;
+  document.getElementById('pago-monto-comp').value=numFmt(saldo);
+  document.getElementById('pago-monto-help').textContent=`Saldo pendiente: $${numFmt(saldo)}`;
+  actualizarResumenPago();
+}
+
+function pagoOnMontoCuenta(){
+  const v=document.getElementById('pago-monto-cuenta').value;
+  pagoState.montoCuenta=parseMonto(v);
+  const {deuda}=calcDeudaCliente(ccClienteActual.id);
+  const exceso=pagoState.montoCuenta - deuda;
+  if(exceso > 0){
+    document.getElementById('pago-exceso').style.display='';
+    document.getElementById('pago-exceso-monto').textContent='$ '+numFmt(exceso);
+  } else {
+    document.getElementById('pago-exceso').style.display='none';
+  }
+  actualizarResumenPago();
+}
+
+function pagoTotalCuenta(){
+  const {deuda}=calcDeudaCliente(ccClienteActual.id);
+  pagoState.montoCuenta=deuda;
+  document.getElementById('pago-monto-cuenta').value=numFmt(deuda);
+  document.getElementById('pago-exceso').style.display='none';
+  actualizarResumenPago();
+}
+
+function actualizarResumenPago(){
+  const monto=pagoState.modalidad==='comp' ? pagoState.montoComp : pagoState.montoCuenta;
+  document.getElementById('pago-resumen').textContent='$ '+numFmt(monto);
+  const btn=document.getElementById('pago-btn-confirmar');
+  const ok = monto > 0 && (pagoState.modalidad!=='comp' || pagoState.compSelId);
+  btn.disabled=!ok;
+  btn.style.opacity=ok?'1':'.5';
+}
+
+function parseMonto(s){
+  if(typeof s==='number')return s;
+  const limpio=String(s).replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.');
+  return parseFloat(limpio)||0;
+}
+
+function confirmarPago(){
+  const c=ccClienteActual;
+  const forma=document.getElementById('pago-forma').value;
+  const fechaIso=document.getElementById('pago-fecha').value;
+  const fechaLegible=fechaIso?fechaIso.split('-').reverse().join('/'):'';
+  const obs=document.getElementById('pago-obs').value;
+  let totalAplicado=0;
+  let aFavorAgregado=0;
+  const aplicaciones=[]; // [{compId, monto}]
+
+  if(pagoState.modalidad==='comp'){
+    const co=DB.comprobantes().find(x=>x.id===pagoState.compSelId);
+    const saldo=co.total - getPagado(co.id);
+    const aPagar=Math.min(pagoState.montoComp, saldo);
+    setPagado(co.id, getPagado(co.id) + aPagar);
+    totalAplicado=aPagar;
+    aplicaciones.push({compId:co.id, monto:aPagar});
+    toast(`Pago de $${numFmt(aPagar)} aplicado a ${co.numero}`);
+  } else {
+    // FIFO sobre comprobantes emitidos impagos del cliente
+    let restante=pagoState.montoCuenta;
+    const impagos=DB.comprobantes()
+      .filter(x=>x.clienteId===c.id && x.estado==='emitido' && (x.total-getPagado(x.id))>0)
+      .sort((a,b)=>{
+        const fa=(a.fecha||'').split('/').reverse().join('');
+        const fb=(b.fecha||'').split('/').reverse().join('');
+        return fa.localeCompare(fb);
+      });
+    for(const co of impagos){
+      if(restante<=0) break;
+      const saldo=co.total - getPagado(co.id);
+      const aplicar=Math.min(restante, saldo);
+      setPagado(co.id, getPagado(co.id) + aplicar);
+      restante-=aplicar;
+      totalAplicado+=aplicar;
+      aplicaciones.push({compId:co.id, monto:aplicar});
+    }
+    if(restante > 0){
+      aFavorAgregado=restante;
+      setSaldoFavor(c.id, getSaldoFavor(c.id) + restante);
+      toast(`Pago aplicado · $${numFmt(restante)} queda a favor`);
+    } else {
+      toast(`Pago de $${numFmt(pagoState.montoCuenta)} aplicado correctamente`);
+    }
+  }
+
+  // Guardar en historial de pagos
+  addHistorialPago({
+    id: uid(),
+    clienteId: c.id,
+    fecha: fechaLegible || new Date().toLocaleDateString('es-AR'),
+    forma, obs,
+    montoTotal: totalAplicado + aFavorAgregado,
+    aplicadoADeuda: totalAplicado,
+    aFavor: aFavorAgregado,
+    aplicaciones,
+  });
+
+  cerrarModal('modal-pago');
+  renderCCDeudaBox();
+  renderCCHistorial();
+}
+// ═══════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════
+// WIZARD PROVEEDOR — Selector visual de columnas (paso 3)
+// ═══════════════════════════════════════════════════
+let pvSel = { campoActivo:null, modoFila:false, asignaciones:{cod:null, desc:null, precio:null}, filaInicio:2 };
+
+// Hook: cuando se renderiza el paso 3, armamos el selector visual
+const _origPvNext = pvNext;
+pvNext = function(n){
+  _origPvNext(n);
+  if(n===3) pvInitSelector();
+};
+
+function pvInitSelector(){
+  pvSel.asignaciones.cod   = pvParseSel(document.getElementById('pv-col-cod'));
+  pvSel.asignaciones.desc  = pvParseSel(document.getElementById('pv-col-desc'));
+  pvSel.asignaciones.precio= pvParseSel(document.getElementById('pv-col-precio'));
+  pvSel.filaInicio = parseInt(document.getElementById('pv-fila-inicio').value)||2;
+  pvSel.campoActivo = null;
+  pvSel.modoFila = false;
+  if(pvSel.asignaciones.cod==null && pvSel.asignaciones.desc==null && pvSel.asignaciones.precio==null){
+    pvAutodetectar();
+  }
+  pvRenderTodo();
+}
+
+function pvParseSel(sel){
+  if(!sel || sel.options.length===0) return null;
+  const v=parseInt(sel.value);
+  return (isNaN(v)||v<0) ? null : v;
+}
+
+function pvAutodetectar(){
+  if(!xlsxData || !xlsxData.length) return;
+  let headerIdx=0;
+  for(let i=0;i<Math.min(5,xlsxData.length);i++){
+    const noVacias=(xlsxData[i]||[]).filter(c=>String(c||'').trim()).length;
+    if(noVacias>=2){ headerIdx=i; break; }
+  }
+  const header=xlsxData[headerIdx]||[];
+  header.forEach((cell,col)=>{
+    const txt=String(cell||'').toLowerCase();
+    if(pvSel.asignaciones.cod==null && /c[oó]digo|cod\b|sku|art[ií]culo/.test(txt)) pvSel.asignaciones.cod=col;
+    else if(pvSel.asignaciones.desc==null && /descripci|producto|art[ií]culo|detalle|nombre/.test(txt)) pvSel.asignaciones.desc=col;
+    else if(pvSel.asignaciones.precio==null && /precio|costo|importe|valor|lista/.test(txt)) pvSel.asignaciones.precio=col;
+  });
+  if(headerIdx>0 && pvSel.filaInicio===2) pvSel.filaInicio = headerIdx+2;
+}
+
+function pvSincronizarSelects(){
+  ['cod','desc','precio'].forEach(k=>{
+    const sel=document.getElementById('pv-col-'+k);
+    if(!sel) return;
+    // Asegurar que existan options para el valor
+    const val = pvSel.asignaciones[k]==null ? -1 : pvSel.asignaciones[k];
+    // Si no hay options aún, los creamos a partir de los datos
+    if(sel.options.length===0 && xlsxData && xlsxData.length){
+      const cols = xlsxData[0] || [];
+      const opts = ['<option value="-1">— no incluir —</option>'];
+      cols.forEach((c,i)=>{
+        opts.push(`<option value="${i}">Columna ${String.fromCharCode(65+i)} — ${c}</option>`);
+      });
+      sel.innerHTML = opts.join('');
+    }
+    sel.value = String(val);
+  });
+  document.getElementById('pv-fila-inicio').value = pvSel.filaInicio;
+}
+
+function pvRenderTodo(){
+  pvRenderChips();
+  pvRenderHint();
+  pvRenderGrid();
+  pvRenderFilaToggle();
+  pvSincronizarSelects();
+  const ok = pvSel.asignaciones.desc!=null && pvSel.asignaciones.precio!=null;
+  const btn=document.getElementById('pv-btn3');
+  if(btn){ btn.disabled=!ok; btn.style.opacity=ok?'1':'.5'; }
+}
+
+function pvRenderChips(){
+  const campos=[{k:'cod', l:'Código', req:false},{k:'desc', l:'Descripción', req:true},{k:'precio', l:'Precio', req:true}];
+  document.getElementById('pv-chips').innerHTML=campos.map(c=>{
+    const v=pvSel.asignaciones[c.k];
+    const activo=pvSel.campoActivo===c.k;
+    let cls='pv-chip';
+    if(v!=null) cls+=' assigned';
+    else if(activo) cls+=' active';
+    const tag = v!=null
+      ? `<span class="pv-chip-tag">Columna ${String.fromCharCode(65+v)}</span><span class="pv-chip-x" onclick="event.stopPropagation();pvDesasignar('${c.k}')">×</span>`
+      : `<span class="pv-chip-tag">${activo?'elegí columna →':'sin asignar'}</span>`;
+    return `<button class="${cls}" onclick="pvSelCampo('${c.k}')">${c.l}${c.req?'<span class="req">*</span>':''}${tag}</button>`;
+  }).join('');
+}
+
+function pvRenderHint(){
+  const hint=document.getElementById('pv-hint');
+  hint.style.fontSize='11px';
+  hint.style.padding='8px 12px';
+  hint.style.marginBottom='10px';
+  if(pvSel.modoFila){
+    hint.className='notice notice-warn';
+    hint.innerHTML='Modo activo: hacé click en el número de fila donde empiezan los datos.';
+  } else if(pvSel.campoActivo){
+    const lbl={cod:'Código',desc:'Descripción',precio:'Precio'}[pvSel.campoActivo];
+    hint.className='notice notice-info';
+    hint.innerHTML=`Hacé click en la columna del Excel que corresponde a <strong>${lbl}</strong>.`;
+  } else {
+    hint.className='notice notice-info';
+    hint.innerHTML='Click en una etiqueta para empezar a asignar. Click en "Fila inicio" para marcar dónde empiezan los datos.';
+  }
+}
+
+function pvRenderFilaToggle(){
+  const btn=document.getElementById('pv-fila-toggle');
+  if(!btn) return;
+  btn.classList.toggle('active', pvSel.modoFila);
+  document.getElementById('pv-fila-label').textContent=pvSel.filaInicio;
+}
+
+function pvRenderGrid(){
+  if(!xlsxData || !xlsxData.length){
+    document.getElementById('pv-excel-wrap').innerHTML='<div style="padding:20px;text-align:center;color:var(--faint)">No hay datos cargados</div>';
+    return;
+  }
+  let maxCols=0;
+  xlsxData.forEach(r=>{ if(r && r.length>maxCols) maxCols=r.length; });
+  if(maxCols===0) maxCols=1;
+
+  let theadCells='<th></th>';
+  for(let col=0; col<maxCols; col++){
+    const letra=String.fromCharCode(65+col);
+    const headerText = (xlsxData[0] && xlsxData[0][col]) ? String(xlsxData[0][col]).trim() : '';
+    const asignadoA = Object.keys(pvSel.asignaciones).find(k=>pvSel.asignaciones[k]===col);
+    const tagLabel = asignadoA ? ({cod:'Código',desc:'Descripción',precio:'Precio'})[asignadoA] : '';
+    theadCells += `<th class="pv-col-cell" onclick="pvClickColumna(${col})">${tagLabel ? `<span class="pv-col-tag">${tagLabel}</span>` : ''}<span class="pv-col-letra">${letra}</span><span class="pv-col-h">${headerText||'\u00a0'}</span></th>`;
+  }
+
+  const filasMostrar = Math.min(12, xlsxData.length);
+  let tbodyHtml='';
+  for(let i=0; i<filasMostrar; i++){
+    const fila=xlsxData[i]||[];
+    const rowNum=i+1;
+    const isStart = rowNum===pvSel.filaInicio;
+    const isBefore = rowNum<pvSel.filaInicio;
+    let trClass='';
+    if(isBefore) trClass='pv-is-header';
+    if(isStart) trClass='pv-is-start';
+    let cells=`<td class="pv-row-num" onclick="pvClickFila(${rowNum})">${rowNum}</td>`;
+    for(let col=0; col<maxCols; col++){
+      const isAsignada=Object.values(pvSel.asignaciones).includes(col);
+      const val=fila[col]==null?'':String(fila[col]);
+      cells += `<td class="${isAsignada?'pv-col-asignada':''}">${val.length>30?val.slice(0,30)+'…':val}</td>`;
+    }
+    tbodyHtml += `<tr class="${trClass}">${cells}</tr>`;
+  }
+
+  const tablaClasses=[];
+  if(pvSel.campoActivo) tablaClasses.push('selecting-col');
+  if(pvSel.modoFila) tablaClasses.push('selecting-row');
+
+  document.getElementById('pv-excel-wrap').innerHTML=`<table class="pv-excel-table ${tablaClasses.join(' ')}"><thead><tr>${theadCells}</tr></thead><tbody>${tbodyHtml}</tbody></table>`;
+}
+
+function pvSelCampo(k){
+  if(pvSel.asignaciones[k]!=null){
+    pvSel.asignaciones[k]=null;
+    pvSel.campoActivo=k;
+  } else if(pvSel.campoActivo===k){
+    pvSel.campoActivo=null;
+  } else {
+    pvSel.campoActivo=k;
+    pvSel.modoFila=false;
+  }
+  pvRenderTodo();
+}
+
+function pvDesasignar(k){
+  pvSel.asignaciones[k]=null;
+  pvRenderTodo();
+}
+
+function pvClickColumna(col){
+  if(!pvSel.campoActivo) return;
+  const otroCampo = Object.keys(pvSel.asignaciones).find(k => pvSel.asignaciones[k]===col && k!==pvSel.campoActivo);
+  if(otroCampo){
+    const labels={cod:'Código',desc:'Descripción',precio:'Precio'};
+    if(!confirm(`La columna ${String.fromCharCode(65+col)} ya está asignada a "${labels[otroCampo]}". ¿Reasignarla a "${labels[pvSel.campoActivo]}"?`)) return;
+    pvSel.asignaciones[otroCampo]=null;
+  }
+  pvSel.asignaciones[pvSel.campoActivo]=col;
+  pvSel.campoActivo=null;
+  pvRenderTodo();
+}
+
+function pvToggleFila(){
+  pvSel.modoFila = !pvSel.modoFila;
+  if(pvSel.modoFila) pvSel.campoActivo=null;
+  pvRenderTodo();
+}
+
+function pvClickFila(n){
+  if(!pvSel.modoFila) return;
+  pvSel.filaInicio = n;
+  pvSel.modoFila = false;
+  pvRenderTodo();
+}
+// ═══════════════════════════════════════════════════
 
 // Cerrar autocomplete al hacer click afuera
 document.addEventListener('click',e=>{
