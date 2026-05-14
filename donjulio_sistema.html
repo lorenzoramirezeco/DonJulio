@@ -1791,7 +1791,7 @@ function confirmarImportacion(){
 }
 
 // ══════════════ HELPERS ══════════════
-function numFmt(n){return Math.round(n).toLocaleString('es-AR')}
+function numFmt(n){return Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 
 // ══════════════ INIT ══════════════
 (async function inicio(){
@@ -2237,6 +2237,7 @@ function pvRenderGrid(){
   }
   let maxCols=0;
   xlsxData.forEach(r=>{ if(r && r.length>maxCols) maxCols=r.length; });
+  if(maxCols<12) maxCols=12;
   if(maxCols===0) maxCols=1;
 
   let theadCells='<th></th>';
@@ -2248,7 +2249,7 @@ function pvRenderGrid(){
     theadCells += `<th class="pv-col-cell" onclick="pvClickColumna(${col})">${tagLabel ? `<span class="pv-col-tag">${tagLabel}</span>` : ''}<span class="pv-col-letra">${letra}</span><span class="pv-col-h">${headerText||'\u00a0'}</span></th>`;
   }
 
-  const filasMostrar = Math.min(12, xlsxData.length);
+  const filasMostrar = Math.min(15, xlsxData.length);
   let tbodyHtml='';
   for(let i=0; i<filasMostrar; i++){
     const fila=xlsxData[i]||[];
